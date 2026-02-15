@@ -15,6 +15,7 @@
     "electron:preview": "vite build && electron .",
     "security:keygen": "node tools/generar-llaves.cjs",
     "security:register": "node tools/registrar-usb.cjs",
+    "security:serial": "node tools/leer-serial-usb.cjs",
     "security:encrypt": "node tools/encriptar-scripts.cjs",
     "security:publish": "node tools/publicar-registro.cjs --push"
   },
