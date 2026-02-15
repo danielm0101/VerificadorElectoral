@@ -1,0 +1,87 @@
+{
+  "name": "verificador-electoral",
+  "version": "1.0.0",
+  "description": "Sistema de Verificación Electoral - E14 y E24",
+  "main": "electron/main.cjs",
+  "author": "Verificador Electoral",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && cross-env ELECTRON_DEV=true electron .\"",
+    "electron:build": "vite build && electron-builder",
+    "electron:preview": "vite build && electron .",
+    "security:keygen": "node tools/generar-llaves.cjs",
+    "security:register": "node tools/registrar-usb.cjs",
+    "security:encrypt": "node tools/encriptar-scripts.cjs",
+    "security:publish": "node tools/publicar-registro.cjs --push"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "electron-updater": "^6.7.3",
+    "lucide-react": "^0.487.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwind-merge": "^2.5.2"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "autoprefixer": "^10.4.19",
+    "concurrently": "^8.2.2",
+    "cross-env": "^10.1.0",
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.4",
+    "typescript": "^5.5.2",
+    "vite": "^5.3.1",
+    "wait-on": "^7.2.0"
+  },
+  "build": {
+    "appId": "com.verificador.electoral",
+    "productName": "Verificador Electoral",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "r-portable",
+        "to": "r-portable",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "r-scripts",
+        "to": "r-scripts",
+        "filter": [
+          "**/*.enc"
+        ]
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "public/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Verificador Electoral"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "danielm0101",
+      "repo": "VerificadorElectoral"
+    }
+  }
+}

@@ -1,0 +1,295 @@
+/**
+ * usb-detector.cjs - Detect removable USB drives and read security keys
+ * Supports both Windows (PowerShell/wmic) and Linux (lsblk).
+ * On Linux, also captures filesystem UUIDs for cross-platform serial matching.
+ */
+
+const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
+const { execSync } = require('child_process');
+
+const KEY_FOLDER = 'VerificadorKey';
+const KEY_FILE = 'llave.key';
+const KEY_SIZE = 16; // 128 bits (USB fragment; combined with GitHub fragment via HKDF for 256-bit key)
+
+/**
+ * Get all removable drives on Windows via PowerShell (primary) with wmic fallback.
+ * PowerShell uses Get-CimInstance which is the modern replacement for wmic
+ * (wmic was deprecated in Windows 11 21H2+).
+ * @returns {{ deviceId: string, serial: string, extraSerials: string[] }[]}
+ */
+function getRemovableDrivesWindows() {
+  // Try PowerShell first (works on Windows 10+ and Windows 11)
+  try {
+    return getRemovableDrivesPS();
+  } catch (err) {
+    console.warn('PowerShell deteccion fallida, intentando wmic:', err.message);
+  }
+
+  // Fallback: wmic (deprecated but may still exist on Windows 10)
+  try {
+    return getRemovableDrivesWmic();
+  } catch (err) {
+    console.error('wmic deteccion tambien fallida:', err.message);
+    return [];
+  }
+}
+
+/**
+ * Detect removable drives via PowerShell Get-CimInstance (modern, Windows 10/11)
+ * @returns {{ deviceId: string, serial: string, extraSerials: string[] }[]}
+ */
+function getRemovableDrivesPS() {
+  const psCmd = `powershell -NoProfile -NonInteractive -Command "Get-CimInstance Win32_LogicalDisk -Filter 'DriveType=2' | Select-Object DeviceID,VolumeSerialNumber | ConvertTo-Json -Compress"`;
+  const output = execSync(psCmd, { encoding: 'utf8', timeout: 15000 }).trim();
+
+  if (!output || output === '') return [];
+
+  let parsed = JSON.parse(output);
+  // PowerShell returns a single object (not array) when there's only one drive
+  if (!Array.isArray(parsed)) parsed = [parsed];
+
+  const drives = [];
+  for (const disk of parsed) {
+    const deviceId = (disk.DeviceID || '').trim();
+    const serial = (disk.VolumeSerialNumber || '').trim();
+    if (deviceId && serial) {
+      drives.push({ deviceId, serial, extraSerials: [] });
+    }
+  }
+  return drives;
+}
+
+/**
+ * Detect removable drives via wmic (legacy fallback, deprecated on Windows 11)
+ * @returns {{ deviceId: string, serial: string, extraSerials: string[] }[]}
+ */
+function getRemovableDrivesWmic() {
+  const output = execSync(
+    'wmic logicaldisk where DriveType=2 get DeviceID,VolumeSerialNumber /format:csv',
+    { encoding: 'utf8', timeout: 10000 }
+  );
+
+  // Strip BOM and normalize line endings (wmic can output \r\n and BOM on some locales)
+  const clean = output.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n');
+  const lines = clean.trim().split('\n').filter(l => l.trim());
+  const drives = [];
+  for (let i = 1; i < lines.length; i++) {
+    const parts = lines[i].trim().split(',');
+    if (parts.length >= 3) {
+      const deviceId = parts[1].trim();
+      const serial = parts[2].trim();
+      if (deviceId && serial) {
+        drives.push({ deviceId, serial, extraSerials: [] });
+      }
+    }
+  }
+  return drives;
+}
+
+/**
+ * Try to auto-mount an unmounted partition using udisksctl
+ * @param {string} partName - e.g. "sdb1"
+ * @returns {string|null} mount point if successful
+ */
+function tryMount(partName) {
+  try {
+    const result = execSync(`udisksctl mount -b /dev/${partName} 2>&1`, {
+      encoding: 'utf8',
+      timeout: 10000
+    });
+    // Output: "Mounted /dev/sdb1 at /run/media/user/LABEL"
+    const match = result.match(/at (.+?)\.?\s*$/);
+    return match ? match[1].trim() : null;
+  } catch (err) {
+    return null;
+  }
+}
+
+/**
+ * Get all removable USB drives on Linux via lsblk (JSON output).
+ * Automatically mounts unmounted partitions.
+ * Also captures filesystem UUIDs for cross-platform compatibility.
+ * @returns {{ deviceId: string, serial: string, extraSerials: string[] }[]}
+ */
+function getRemovableDrivesLinux() {
+  const output = execSync(
+    'lsblk -Jno NAME,SERIAL,RM,MOUNTPOINT,TYPE,UUID 2>/dev/null || echo "{}"',
+    { encoding: 'utf8', timeout: 10000 }
+  );
+
+  const data = JSON.parse(output);
+  if (!data.blockdevices) return [];
+
+  const drives = [];
+
+  for (const dev of data.blockdevices) {
+    // Only removable disks with a serial
+    if (dev.type !== 'disk' || !dev.rm || !dev.serial) continue;
+
+    // Collect filesystem UUIDs from partitions for cross-platform matching
+    const extraSerials = [];
+
+    // Check if the disk itself is mounted
+    if (dev.mountpoint) {
+      if (dev.uuid) extraSerials.push(dev.uuid);
+      drives.push({ deviceId: dev.mountpoint, serial: dev.serial, extraSerials });
+    }
+
+    // Check partitions (children)
+    if (dev.children) {
+      for (const child of dev.children) {
+        let mountpoint = child.mountpoint;
+
+        // Collect filesystem UUID from partition
+        if (child.uuid) {
+          extraSerials.push(child.uuid);
+        }
+
+        // If partition is not mounted, try to mount it
+        if (!mountpoint) {
+          console.log(`USB particion ${child.name} no montada, intentando montar...`);
+          mountpoint = tryMount(child.name);
+          if (mountpoint) {
+            console.log(`Montada en: ${mountpoint}`);
+          }
+        }
+
+        if (mountpoint) {
+          drives.push({ deviceId: mountpoint, serial: dev.serial, extraSerials });
+        }
+      }
+    }
+
+    // Disk with no partitions and not mounted — try mounting directly
+    if (!dev.children && !dev.mountpoint) {
+      if (dev.uuid) extraSerials.push(dev.uuid);
+      const mountpoint = tryMount(dev.name);
+      if (mountpoint) {
+        drives.push({ deviceId: mountpoint, serial: dev.serial, extraSerials });
+      }
+    }
+  }
+
+  return drives;
+}
+
+/**
+ * Get all removable drives (cross-platform)
+ * @returns {{ deviceId: string, serial: string, extraSerials: string[] }[]}
+ */
+function getRemovableDrives() {
+  try {
+    if (process.platform === 'win32') {
+      return getRemovableDrivesWindows();
+    } else {
+      return getRemovableDrivesLinux();
+    }
+  } catch (err) {
+    console.error('Error detecting USB drives:', err.message);
+    return [];
+  }
+}
+
+/**
+ * Hash a volume serial number with SHA-256
+ * @param {string} serial - Volume serial number
+ * @returns {string} Hex-encoded SHA-256 hash
+ */
+function hashSerial(serial) {
+  return crypto.createHash('sha256').update(serial.toUpperCase()).digest('hex');
+}
+
+/**
+ * Get all possible hashes for a drive (primary serial + extraSerials + normalized variants)
+ * This helps cross-platform matching between Linux filesystem UUIDs and Windows VolumeSerialNumbers.
+ * @param {{ serial: string, extraSerials?: string[] }} drive
+ * @returns {string[]} Array of unique SHA-256 hashes
+ */
+function getAllDriveHashes(drive) {
+  const serials = new Set();
+
+  // Primary serial (hardware serial on Linux, VolumeSerialNumber on Windows)
+  if (drive.serial) {
+    serials.add(drive.serial.toUpperCase());
+  }
+
+  // Extra serials (filesystem UUIDs on Linux)
+  if (drive.extraSerials) {
+    for (const extra of drive.extraSerials) {
+      if (!extra) continue;
+      const upper = extra.toUpperCase();
+      serials.add(upper);
+
+      // Also try without dashes (FAT32: "XXXX-XXXX" → "XXXXXXXX")
+      const noDash = upper.replace(/-/g, '');
+      if (noDash !== upper) {
+        serials.add(noDash);
+      }
+
+      // For NTFS UUIDs (16 hex chars), also try first 8 chars
+      // as Windows VolumeSerialNumber might only be 8 hex chars
+      if (/^[0-9A-F]{16}$/.test(noDash)) {
+        serials.add(noDash.substring(0, 8));
+        serials.add(noDash.substring(8, 16));
+      }
+    }
+  }
+
+  // Hash all unique serial variants
+  const hashes = new Set();
+  for (const s of serials) {
+    hashes.add(hashSerial(s));
+  }
+  return Array.from(hashes);
+}
+
+/**
+ * Scan all removable drives for one containing VerificadorKey/llave.key (32 bytes)
+ * @returns {{ drive: { deviceId: string, serial: string, extraSerials: string[] }, keyPath: string } | null}
+ */
+function findSecurityUSB() {
+  const drives = getRemovableDrives();
+  console.log('USBs detectadas:', drives.length, drives.map(d => d.deviceId + ' [' + d.serial + ']').join(', '));
+
+  for (const drive of drives) {
+    const keyPath = path.join(drive.deviceId, KEY_FOLDER, KEY_FILE);
+    try {
+      if (fs.existsSync(keyPath)) {
+        const stat = fs.statSync(keyPath);
+        if (stat.size === KEY_SIZE) {
+          return { drive, keyPath };
+        }
+      }
+    } catch (err) {
+      // Permission error or drive not accessible, skip
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Read the 32-byte encryption key from a key file
+ * @param {string} keyPath - Absolute path to llave.key
+ * @returns {Buffer} 32-byte key
+ */
+function readKey(keyPath) {
+  const key = fs.readFileSync(keyPath);
+  if (key.length !== KEY_SIZE) {
+    throw new Error(`Llave invalida: esperaba ${KEY_SIZE} bytes, tiene ${key.length}`);
+  }
+  return key;
+}
+
+module.exports = {
+  getRemovableDrives,
+  hashSerial,
+  getAllDriveHashes,
+  findSecurityUSB,
+  readKey,
+  KEY_FOLDER,
+  KEY_FILE,
+  KEY_SIZE
+};
