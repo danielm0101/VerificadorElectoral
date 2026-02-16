@@ -409,21 +409,24 @@ ipcMain.handle('convertir-pdf-csv-v2', async (event, { archivos, apiKey, modo = 
       // Consulta: consulta.csv (uno solo)
       // CITREP: citrep_XX.csv (por circunscripción, XX = número)
       let nombreCSV;
-      switch (tipoEleccion) {
-        case 'Senado':
+      // Normalizar: quitar tildes para comparación segura
+      const tipoNorm = tipoEleccion.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+
+      switch (tipoNorm) {
+        case 'senado':
           nombreCSV = 'senado';
           break;
-        case 'Cámara':
+        case 'camara':
           if (!codigoDepartamento) {
             resolve({ success: false, error: 'Debe seleccionar un departamento para Cámara.' });
             return;
           }
           nombreCSV = `camara_${codigoDepartamento}`;
           break;
-        case 'Consulta':
+        case 'consulta':
           nombreCSV = 'consulta';
           break;
-        case 'CITREP':
+        case 'citrep':
           if (!circunscripcion) {
             resolve({ success: false, error: 'Debe seleccionar una circunscripción para CITREP.' });
             return;
@@ -918,15 +921,3 @@ ipcMain.handle('comparar-e14-e24', async (event, archivoCSV, archivoMMV, carpeta
   });
 });
 
-// ============================================
-// LEGACY: Mantener compatibilidad
-// ============================================
-
-ipcMain.handle('convertir-pdf-csv', async (event, carpetaPDFs) => {
-  // Redirigir a la nueva versión (sin API key, fallará)
-  console.warn('DEPRECATED: Usar convertir-pdf-csv-v2 en su lugar');
-  return {
-    success: false,
-    error: 'Esta función está deprecada. Usar convertir-pdf-csv-v2'
-  };
-});

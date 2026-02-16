@@ -79,7 +79,7 @@ function main() {
     process.exit(1);
   }
 
-  const files = findFiles(R_SCRIPTS_DIR, ['.r', '.csv']);
+  const files = findFiles(R_SCRIPTS_DIR, ['.r', '.R', '.csv']);
 
   if (files.length === 0) {
     console.error('No se encontraron archivos .R o .csv en r-scripts/');

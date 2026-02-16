@@ -1,74 +1,71 @@
 # Verificador Electoral
 
-Aplicación de escritorio para la verificación de actas electorales E-14 y E-24.
+Aplicacion de escritorio para el Consejo Nacional Electoral (CNE) de Colombia.
+Permite verificar actas electorales E-14 y E-24 para las Elecciones de Congreso 2026, extrayendo datos de PDFs mediante IA y comparandolos con los resultados oficiales de la Registraduria.
 
 ## Requisitos
 
-- Node.js 18 o superior
-- npm o pnpm
+- Node.js 18+
+- R 4.x (incluido como R Portable en Windows)
+- USB autorizada con llave de seguridad
 
-## Instalación
+## Instalacion
 
 ```bash
 npm install
 ```
 
-## Desarrollo
+## Scripts disponibles
 
-```bash
-# Solo React (navegador)
-npm run dev
-
-# Electron + React
-npm run electron:dev
-```
-
-## Construir instalador
-
-```bash
-npm run electron:build
-```
-
-El instalador se generará en la carpeta `dist-electron/`.
+| Script | Descripcion |
+|--------|-------------|
+| `npm run electron:dev` | Modo desarrollo (Vite + Electron) |
+| `npm run electron:build` | Compilar instalador Windows (NSIS) |
+| `npm run security:keygen` | Generar fragmentos de llave desde llave_maestra |
+| `npm run security:register` | Registrar USB autorizada con metadata |
+| `npm run security:encrypt` | Encriptar scripts R y CSVs de coordenadas |
+| `npm run security:publish` | Firmar y publicar registro en GitHub Pages |
 
 ## Estructura del proyecto
 
 ```
 VerificadorElectoral/
-├── electron/           # Código principal de Electron
-│   ├── main.js        # Proceso principal
-│   └── preload.js     # APIs expuestas al renderer
-├── src/               # Código React
-│   ├── App.tsx        # Componente principal
-│   ├── assets/        # Imágenes y recursos
-│   ├── components/    # Componentes reutilizables
-│   └── styles/        # Estilos CSS
-├── public/            # Archivos estáticos
-└── dist-electron/     # Instaladores generados
+├── electron/
+│   ├── main.cjs              # Proceso principal, IPC handlers, R integration
+│   ├── preload.cjs            # contextBridge → window.electronAPI
+│   └── security/
+│       ├── encryption.cjs     # AES-256-GCM + HKDF
+│       ├── validator.cjs      # Validacion USB + GitHub + HMAC + tiers
+│       └── usb-detector.cjs   # Deteccion USB cross-platform
+├── src/
+│   ├── App.tsx                # Componente principal React
+│   ├── types.ts               # Tipos e interfaces
+│   ├── constants.ts           # Constantes (tabs, labels, colores)
+│   ├── components/            # Componentes UI reutilizables
+│   ├── hooks/                 # Custom hooks (security, update, config)
+│   ├── utils/                 # Utilidades (clasificacion de errores)
+│   ├── assets/                # Imagenes y recursos
+│   └── divipoleData.ts        # Datos DIVIPOLE (auto-generado, no editar)
+├── r-scripts/
+│   ├── *.R.enc                # Scripts R encriptados
+│   └── coordenadas/*.csv.enc  # Coordenadas encriptadas
+├── tools/                     # Scripts de seguridad y administracion
+└── r-portable/                # R Portable (solo Windows, no en git)
 ```
 
-## Carpetas de trabajo
+## Seguridad
 
-La aplicación crea automáticamente las siguientes carpetas en Documentos:
+El sistema usa doble llave (USB + GitHub) con AES-256-GCM:
 
-- `VerificadorElectoral/E14_PDFs` - PDFs de E-14 originales
-- `VerificadorElectoral/E14_CSVs` - CSVs convertidos
-- `VerificadorElectoral/E24_MMV` - Archivos MMV de E-24
-- `VerificadorElectoral/Resultados` - Archivos de comparación
-- `VerificadorElectoral/Evidencias` - Evidencias de discrepancias
+- La llave maestra se divide en dos fragmentos de 16 bytes
+- Un fragmento va en la USB autorizada, el otro en GitHub Pages
+- Se derivan mediante HKDF-SHA256 para obtener la clave de 256 bits
+- El registro de USBs autorizadas se firma con HMAC-SHA256
+- Cada USB tiene tier (admin/extractor/comparador/full) y fecha de expiracion
 
-## Integración con R (pendiente)
+## Tecnologias
 
-Los siguientes handlers están preparados para conectar con scripts R:
-
-- `convertir-pdf-csv` - Conversión de PDFs a CSV
-- `comparar-e14-e24` - Comparación entre E-14 y E-24
-- `ejecutar-script-r` - Ejecución de scripts R personalizados
-
-## Tecnologías
-
-- Electron 31
-- React 18
-- Vite 5
-- Tailwind CSS 3
-- TypeScript
+- Electron 31 + React 18 + TypeScript + Tailwind CSS 3
+- Vite 5 (build)
+- R 4.x (procesamiento de PDFs y comparacion)
+- electron-updater (actualizaciones automaticas via GitHub Releases)

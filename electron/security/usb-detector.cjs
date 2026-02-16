@@ -246,7 +246,7 @@ function getAllDriveHashes(drive) {
 }
 
 /**
- * Scan all removable drives for one containing VerificadorKey/llave.key (32 bytes)
+ * Scan all removable drives for one containing VerificadorKey/llave.key (16 bytes)
  * @returns {{ drive: { deviceId: string, serial: string, extraSerials: string[] }, keyPath: string } | null}
  */
 function findSecurityUSB() {
@@ -271,9 +271,9 @@ function findSecurityUSB() {
 }
 
 /**
- * Read the 32-byte encryption key from a key file
+ * Read the 16-byte USB key fragment from a key file
  * @param {string} keyPath - Absolute path to llave.key
- * @returns {Buffer} 32-byte key
+ * @returns {Buffer} 16-byte key fragment
  */
 function readKey(keyPath) {
   const key = fs.readFileSync(keyPath);

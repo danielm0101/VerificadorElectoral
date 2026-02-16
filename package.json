@@ -1,9 +1,12 @@
 {
   "name": "verificador-electoral",
-  "version": "1.0.0",
-  "description": "Sistema de Verificación Electoral - E14 y E24",
+  "version": "1.0.1",
+  "description": "Sistema de Verificación Electoral - E14 y E24 - Consejo Nacional Electoral de Colombia",
   "main": "electron/main.cjs",
-  "author": "Verificador Electoral",
+  "author": {
+    "name": "Consejo Nacional Electoral de Colombia",
+    "email": "verificador@cne.gov.co"
+  },
   "license": "MIT",
   "private": true,
   "type": "module",
@@ -70,14 +73,22 @@
     ],
     "win": {
       "target": "nsis",
-      "icon": "public/icon.ico"
+      "icon": "public/icon.ico",
+      "publisherName": "Consejo Nacional Electoral de Colombia",
+      "legalTrademarks": "Consejo Nacional Electoral de Colombia - Elecciones Congreso 2026",
+      "requestedExecutionLevel": "asInvoker"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Verificador Electoral"
+      "shortcutName": "Verificador Electoral",
+      "installerIcon": "public/icon.ico",
+      "uninstallerIcon": "public/icon.ico",
+      "installerHeaderIcon": "public/icon.ico",
+      "deleteAppDataOnUninstall": false,
+      "displayLanguageSelector": false
     },
     "publish": {
       "provider": "github",
