@@ -199,6 +199,11 @@ function setupAutoUpdater() {
   autoUpdater.on('error', (err) => {
     console.error('[updater] Error:', err.message);
     console.error('[updater] Stack:', err.stack);
+    if (mainWindow) {
+      mainWindow.webContents.send('update-error', {
+        message: err.message
+      });
+    }
   });
 
   // Check for updates after window is ready

@@ -378,6 +378,7 @@ export default function App() {
         available={update.available}
         progress={update.progress}
         ready={update.ready}
+        updateError={update.updateError}
         onDownload={() => update.download()}
         onInstall={() => update.install()}
       />

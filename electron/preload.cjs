@@ -57,10 +57,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onUpdateDownloaded: (callback) => {
     ipcRenderer.on('update-downloaded', (event, data) => callback(data));
   },
+  onUpdateError: (callback) => {
+    ipcRenderer.on('update-error', (event, data) => callback(data));
+  },
   removeUpdateListeners: () => {
     ipcRenderer.removeAllListeners('update-available');
     ipcRenderer.removeAllListeners('update-progress');
     ipcRenderer.removeAllListeners('update-downloaded');
+    ipcRenderer.removeAllListeners('update-error');
   },
 
   // Info del sistema
