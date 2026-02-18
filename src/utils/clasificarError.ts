@@ -139,11 +139,29 @@ export function clasificarError(error: string): { tipo: TipoError; mensaje: stri
     e.includes('parse error') ||
     e.includes('unexpected token') ||
     e.includes('unexpected end') ||
-    e.includes('json parse')
+    e.includes('json parse') ||
+    e.includes('no se encontro json valido') ||
+    e.includes('no hay datos de ubicacion') ||
+    e.includes('no hay datos de votos')
   ) {
     return {
       tipo: 'respuesta_ia',
       mensaje: 'La IA no pudo leer correctamente este PDF. El formato puede ser diferente al esperado. Reintenta o revisalo manualmente.'
+    };
+  }
+
+  // PDF MAL ESCANEADO / NO SE PUDO ALINEAR
+  if (
+    e.includes('no se pudo alinear') ||
+    e.includes('no se detecto marcador') ||
+    e.includes('error en preparacion') ||
+    e.includes('no se pudo leer') ||
+    e.includes('warpPerspective') ||
+    e.includes('perspectiva')
+  ) {
+    return {
+      tipo: 'pdf_corrupto',
+      mensaje: 'El PDF no pudo ser procesado. Puede estar mal escaneado, rotado o con baja calidad de imagen. Descargalo nuevamente.'
     };
   }
 

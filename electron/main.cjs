@@ -86,6 +86,9 @@ app.whenReady().then(() => {
   // Security validation (async - requires internet for double key + remote registry)
   createWindow();
 
+  // Auto-updater (after window is created)
+  setupAutoUpdater();
+
   const { validate } = require('./security/validator.cjs');
   const encryptedDir = isDev
     ? path.join(__dirname, '..', 'r-scripts')
@@ -143,10 +146,24 @@ app.on('will-quit', () => {
 // ============================================
 
 function setupAutoUpdater() {
-  if (!autoUpdater || isDev) return;
+  if (!autoUpdater) {
+    console.log('[updater] autoUpdater no disponible');
+    return;
+  }
+  if (isDev) {
+    console.log('[updater] Saltando en modo desarrollo');
+    return;
+  }
+
+  console.log('[updater] Configurando auto-updater...');
+  console.log('[updater] App version:', app.getVersion());
+
+  autoUpdater.on('checking-for-update', () => {
+    console.log('[updater] Buscando actualizaciones...');
+  });
 
   autoUpdater.on('update-available', (info) => {
-    console.log('Actualizacion disponible:', info.version);
+    console.log('[updater] Actualizacion disponible:', info.version);
     if (mainWindow) {
       mainWindow.webContents.send('update-available', {
         version: info.version,
@@ -155,11 +172,12 @@ function setupAutoUpdater() {
     }
   });
 
-  autoUpdater.on('update-not-available', () => {
-    console.log('No hay actualizaciones disponibles');
+  autoUpdater.on('update-not-available', (info) => {
+    console.log('[updater] No hay actualizaciones. Ultima version:', info.version);
   });
 
   autoUpdater.on('download-progress', (progress) => {
+    console.log('[updater] Descargando:', Math.round(progress.percent) + '%');
     if (mainWindow) {
       mainWindow.webContents.send('update-progress', {
         percent: Math.round(progress.percent),
@@ -170,7 +188,7 @@ function setupAutoUpdater() {
   });
 
   autoUpdater.on('update-downloaded', (info) => {
-    console.log('Actualizacion descargada:', info.version);
+    console.log('[updater] Actualizacion descargada:', info.version);
     if (mainWindow) {
       mainWindow.webContents.send('update-downloaded', {
         version: info.version
@@ -179,21 +197,18 @@ function setupAutoUpdater() {
   });
 
   autoUpdater.on('error', (err) => {
-    console.error('Error en auto-updater:', err.message);
+    console.error('[updater] Error:', err.message);
+    console.error('[updater] Stack:', err.stack);
   });
 
-  // Check for updates after a short delay
+  // Check for updates after window is ready
   setTimeout(() => {
+    console.log('[updater] Iniciando busqueda de actualizaciones...');
     autoUpdater.checkForUpdates().catch(err => {
-      console.warn('Error buscando actualizaciones:', err.message);
+      console.error('[updater] Error buscando actualizaciones:', err.message);
     });
   }, 5000);
 }
-
-// Initialize auto-updater after app is ready
-app.whenReady().then(() => {
-  setupAutoUpdater();
-});
 
 // ============================================
 // IPC Handlers - Security
