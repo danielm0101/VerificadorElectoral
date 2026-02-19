@@ -59,7 +59,9 @@ function createWindow() {
 
 // Crear carpeta de trabajo al iniciar
 function crearCarpetaTrabajo() {
-  const carpetaBase = path.join(app.getPath('documents'), 'VerificadorElectoral');
+  // Usamos userData (%APPDATA%\Verificador Electoral) en lugar de Documents/Desktop
+  // para evitar el bloqueo de Windows Defender (Controlled Folder Access)
+  const carpetaBase = app.getPath('userData');
   const carpetas = [
     carpetaBase,
     path.join(carpetaBase, 'E14_PDFs'),
@@ -248,7 +250,7 @@ ipcMain.handle('instalar-actualizacion', () => {
 
 // Obtener ruta de carpeta de trabajo
 ipcMain.handle('obtener-carpeta-trabajo', () => {
-  return path.join(app.getPath('documents'), 'VerificadorElectoral');
+  return app.getPath('userData');
 });
 
 // Seleccionar carpeta con archivos PDF
@@ -309,7 +311,7 @@ ipcMain.handle('seleccionar-carpeta-mmv', async () => {
 
 // Abrir carpeta en explorador
 ipcMain.handle('abrir-carpeta', async (event, ruta) => {
-  const carpetaBase = path.join(app.getPath('documents'), 'VerificadorElectoral');
+  const carpetaBase = app.getPath('userData');
   const rutaCompleta = ruta ? path.join(carpetaBase, ruta) : carpetaBase;
 
   if (fs.existsSync(rutaCompleta)) {
@@ -336,7 +338,7 @@ ipcMain.handle('abrir-url', async (event, url) => {
 
 // Guardar configuración
 ipcMain.handle('guardar-configuracion', async (event, config) => {
-  const carpetaBase = path.join(app.getPath('documents'), 'VerificadorElectoral');
+  const carpetaBase = app.getPath('userData');
   const archivoConfig = path.join(carpetaBase, 'config.json');
 
   try {
@@ -350,7 +352,7 @@ ipcMain.handle('guardar-configuracion', async (event, config) => {
 
 // Cargar configuración
 ipcMain.handle('cargar-configuracion', async () => {
-  const carpetaBase = path.join(app.getPath('documents'), 'VerificadorElectoral');
+  const carpetaBase = app.getPath('userData');
   const archivoConfig = path.join(carpetaBase, 'config.json');
 
   try {
@@ -399,9 +401,9 @@ function obtenerRutaScripts() {
   return path.join(process.resourcesPath, 'r-scripts');
 }
 
-// Obtener carpeta de salida
+// Obtener carpeta de salida (dentro de userData para evitar bloqueo CFA de Windows)
 function obtenerCarpetaSalida() {
-  return path.join(app.getPath('desktop'), 'VerificadorElectoral_Resultados');
+  return path.join(app.getPath('userData'), 'Resultados');
 }
 
 // Verificar si R está disponible
