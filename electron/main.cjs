@@ -371,11 +371,13 @@ ipcMain.handle('cargar-configuracion', async () => {
 // Obtener ruta de R Portable
 function obtenerRutaR() {
   if (isDev) {
-    // Dev: buscar R Portable local, si no existe usar R del sistema
-    const rDev = path.join(__dirname, '..', 'r-portable', 'App', 'R-Portable', 'bin', 'x64', 'Rscript.exe');
-    if (fs.existsSync(rDev)) return rDev;
-    const rDev32 = path.join(__dirname, '..', 'r-portable', 'App', 'R-Portable', 'bin', 'Rscript.exe');
-    if (fs.existsSync(rDev32)) return rDev32;
+    // Dev: en Linux ignorar .exe de Windows, usar R del sistema directamente
+    if (process.platform !== 'linux') {
+      const rDev = path.join(__dirname, '..', 'r-portable', 'App', 'R-Portable', 'bin', 'x64', 'Rscript.exe');
+      if (fs.existsSync(rDev)) return rDev;
+      const rDev32 = path.join(__dirname, '..', 'r-portable', 'App', 'R-Portable', 'bin', 'Rscript.exe');
+      if (fs.existsSync(rDev32)) return rDev32;
+    }
     return 'Rscript'; // Fallback: R del sistema (Linux)
   } else {
     // Produccion: R Portable empaquetado en resources
