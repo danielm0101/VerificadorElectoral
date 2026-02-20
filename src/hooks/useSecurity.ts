@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 export function useSecurity() {
   const [status, setStatus] = useState<string>('pending');
   const [message, setMessage] = useState<string>('');
-  const [tier, setTier] = useState<string>('full');
+  const [tier, setTier] = useState<string>('extractor');
 
   useEffect(() => {
     if (!window.electronAPI?.obtenerSecurityStatus) return;

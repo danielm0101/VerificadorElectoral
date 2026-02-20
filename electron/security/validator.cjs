@@ -32,7 +32,7 @@ const KEY_FRAGMENT_URL = 'https://danielm0101.github.io/verificador-registro/key
  * @param {string} encryptedScriptsDir - Directory containing .enc files
  * @returns {Promise<{ status: string, scriptsDir?: string, message?: string, tier?: string }>}
  */
-async function validate(encryptedScriptsDir) {
+async function validate(encryptedScriptsDir, tempBaseDir) {
   // Step 1: Find USB with security key file
   const usbResult = findSecurityUSB();
   if (!usbResult) {
@@ -125,10 +125,10 @@ async function validate(encryptedScriptsDir) {
   }
 
   const entryData = typeof matchedEntry === 'string'
-    ? { hash: matchedEntry, tier: 'full', expira: null, nombre: 'Legacy' }
+    ? { hash: matchedEntry, tier: 'extractor', expira: null, nombre: 'Legacy' }
     : matchedEntry;
 
-  console.log(`USB autorizada: ${entryData.nombre || 'sin nombre'} (tier: ${entryData.tier || 'full'})`);
+  console.log(`USB autorizada: ${entryData.nombre || 'sin nombre'} (tier: ${entryData.tier || 'extractor'})`);
 
   // Step 8: Check expiration
   if (entryData.expira) {
@@ -138,14 +138,17 @@ async function validate(encryptedScriptsDir) {
       return {
         status: 'usb_expirada',
         message: `La autorización de esta USB expiró el ${entryData.expira}. Contacte al administrador para renovarla.`,
-        tier: entryData.tier || 'full'
+        tier: entryData.tier || 'extractor'
       };
     }
   }
 
-  // Step 9: Decrypt all .enc files to temp directory
+  // Step 9: Decrypt all .enc files to a controlled directory
+  // Usamos tempBaseDir (userData) en lugar de os.tmpdir() para que quede
+  // dentro de la exclusion de Windows Defender configurada en el instalador.
   const tempSuffix = crypto.randomBytes(8).toString('hex');
-  const tempDir = path.join(os.tmpdir(), `verificador_${tempSuffix}`);
+  const base = tempBaseDir || os.tmpdir();
+  const tempDir = path.join(base, `verificador_${tempSuffix}`);
 
   try {
     decryptAllFiles(encryptedScriptsDir, tempDir, fullKey);
@@ -160,7 +163,7 @@ async function validate(encryptedScriptsDir) {
   return {
     status: 'ok',
     scriptsDir: tempDir,
-    tier: entryData.tier || 'full'
+    tier: entryData.tier || 'extractor'
   };
 }
 
@@ -246,8 +249,12 @@ function cleanupTempDir(dirPath) {
   const tmpBase = os.tmpdir();
   const dirName = path.basename(dirPath);
 
-  if (!dirPath.startsWith(tmpBase)) {
-    console.error('cleanupTempDir: refusing to delete outside temp dir:', dirPath);
+  // Permitir tanto %TEMP% como subdirectorios de userData (ej: %APPDATA%\Verificador Electoral)
+  const isInTmp = dirPath.startsWith(tmpBase);
+  const isInUserData = dirName.startsWith('verificador_') && !dirPath.startsWith(tmpBase);
+
+  if (!isInTmp && !isInUserData) {
+    console.error('cleanupTempDir: refusing to delete outside allowed dirs:', dirPath);
     return;
   }
   if (!dirName.startsWith('verificador_')) {

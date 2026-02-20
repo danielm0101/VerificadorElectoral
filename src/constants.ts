@@ -14,8 +14,8 @@ export const ALL_TABS: Seccion[] = [
   'comparacion_automatica', 'comparacion_archivos', 'comparacion_manual'
 ];
 
-export const EXTRACTOR_TABS: Seccion[] = ['informacion', 'identificacion', 'extraccion'];
-export const COMPARADOR_TABS: Seccion[] = ['informacion', 'comparacion_automatica', 'comparacion_archivos', 'comparacion_manual'];
+export const EXTRACTOR_TABS: Seccion[] = ['informacion', 'identificacion', 'extraccion', 'comparacion_automatica', 'comparacion_manual'];
+export const COMPARADOR_TABS: Seccion[] = ['comparacion_archivos'];
 
 export const TAB_COLORS: Record<Seccion, string> = {
   informacion: '#a855f7',
@@ -38,7 +38,6 @@ export const TAB_BG_CLASSES: Record<Seccion, string> = {
 export const URL_REGISTRADURIA = 'https://danielm0101.github.io/redirect-registraduria/';
 
 export function getVisibleTabs(tier: string): Seccion[] {
-  if (tier === 'extractor') return EXTRACTOR_TABS;
   if (tier === 'comparador') return COMPARADOR_TABS;
-  return ALL_TABS;
+  return EXTRACTOR_TABS;
 }

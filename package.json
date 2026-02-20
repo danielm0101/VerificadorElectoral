@@ -1,6 +1,6 @@
 {
   "name": "verificador-electoral",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Sistema de Verificación Electoral - E14 y E24 - Consejo Nacional Electoral de Colombia",
   "main": "electron/main.cjs",
   "author": {
@@ -96,7 +96,8 @@
       "uninstallerIcon": "public/icon.ico",
       "installerHeaderIcon": "public/icon.ico",
       "deleteAppDataOnUninstall": false,
-      "displayLanguageSelector": false
+      "displayLanguageSelector": false,
+      "include": "build/installer.nsh"
     },
     "publish": {
       "provider": "github",

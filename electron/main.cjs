@@ -96,12 +96,16 @@ app.whenReady().then(() => {
     ? path.join(__dirname, '..', 'r-scripts')
     : path.join(process.resourcesPath, 'r-scripts');
 
-  validate(encryptedDir).then(result => {
+  // Desencriptar en %APPDATA%\Verificador Electoral\Scripts\ (ya excluido de Defender)
+  // en lugar de %TEMP% que Defender analiza en tiempo real
+  const scriptsBaseDir = path.join(app.getPath('userData'), 'Scripts');
+
+  validate(encryptedDir, scriptsBaseDir).then(result => {
     securityStatus = result;
     if (result.status === 'ok') {
       securityTempDir = result.scriptsDir;
       console.log('USB validada. Scripts desencriptados en:', securityTempDir);
-      console.log('Tier:', result.tier || 'full');
+      console.log('Tier:', result.tier || 'extractor');
     } else {
       console.warn('Validacion USB fallida:', result.status, result.message);
     }

@@ -12,7 +12,7 @@ import {
   getCodigoDepartamento,
 } from './divipoleData';
 import type { Seccion, TipoError, ArchivoExitoso, ArchivoFallido, DiscrepanciaFila, EventoR, ResultadoComparacion } from './types';
-import { TAB_COLORS, URL_REGISTRADURIA } from './constants';
+import { TAB_COLORS, URL_REGISTRADURIA, getVisibleTabs } from './constants';
 import { clasificarError } from './utils/clasificarError';
 import { useSecurity } from './hooks/useSecurity';
 import { useAutoUpdate } from './hooks/useAutoUpdate';
@@ -109,9 +109,7 @@ export default function App() {
   // === Handlers ===
 
   const handleContinuar = async () => {
-    if (seccionActiva === 'informacion') {
-      setSeccionActiva('identificacion');
-    } else if (seccionActiva === 'identificacion') {
+    if (seccionActiva === 'identificacion') {
       const camposCompletos = esCITREP
         ? (tipoEleccion && circunscripcion && departamento && municipio && zona && keyAsignada)
         : (tipoEleccion && departamento && municipio && zona && keyAsignada);
@@ -120,12 +118,12 @@ export default function App() {
       } else {
         alert('Por favor completa todos los campos antes de continuar');
       }
-    } else if (seccionActiva === 'extraccion') {
-      setSeccionActiva('comparacion_automatica');
-    } else if (seccionActiva === 'comparacion_automatica') {
-      setSeccionActiva('comparacion_archivos');
-    } else if (seccionActiva === 'comparacion_archivos') {
-      setSeccionActiva('comparacion_manual');
+      return;
+    }
+    const visibleTabs = getVisibleTabs(securityTier);
+    const currentIndex = visibleTabs.indexOf(seccionActiva);
+    if (currentIndex >= 0 && currentIndex < visibleTabs.length - 1) {
+      setSeccionActiva(visibleTabs[currentIndex + 1]);
     }
   };
 
@@ -134,7 +132,11 @@ export default function App() {
       await window.electronAPI.guardarConfiguracion({ tipoEleccion, circunscripcion, departamento, municipio, zona, keyAsignada });
     }
     setMostrarModalConfirmacion(false);
-    setSeccionActiva('extraccion');
+    const visibleTabs = getVisibleTabs(securityTier);
+    const idIndex = visibleTabs.indexOf('identificacion');
+    if (idIndex >= 0 && idIndex < visibleTabs.length - 1) {
+      setSeccionActiva(visibleTabs[idIndex + 1]);
+    }
   };
 
   const handleSeleccionarPDFs = async () => {
