@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
+import { URL_RELEASES } from '../constants';
+
+const MAX_DOWNLOAD_ATTEMPTS = 3; // 1 inicial + 2 reintentos
 
 export function useAutoUpdate() {
   const [available, setAvailable] = useState<string | null>(null);
   const [progress, setProgress] = useState<number | null>(null);
   const [ready, setReady] = useState(false);
   const [updateError, setUpdateError] = useState<string | null>(null);
+  const [downloadAttempts, setDownloadAttempts] = useState(0);
 
   useEffect(() => {
     if (!window.electronAPI?.onUpdateAvailable) return;
@@ -12,6 +16,7 @@ export function useAutoUpdate() {
     window.electronAPI.onUpdateAvailable((data) => {
       setAvailable(data.version);
       setUpdateError(null);
+      setDownloadAttempts(0);
     });
     window.electronAPI.onUpdateProgress((data) => {
       setProgress(data.percent);
@@ -32,10 +37,16 @@ export function useAutoUpdate() {
   }, []);
 
   const download = () => {
+    setDownloadAttempts(c => c + 1);
     setUpdateError(null);
     window.electronAPI?.descargarActualizacion();
   };
+
   const install = () => window.electronAPI?.instalarActualizacion();
 
-  return { available, progress, ready, updateError, download, install };
+  const openManualDownload = () => window.electronAPI?.abrirURL(URL_RELEASES);
+
+  const canRetry = downloadAttempts < MAX_DOWNLOAD_ATTEMPTS;
+
+  return { available, progress, ready, updateError, canRetry, download, install, openManualDownload };
 }

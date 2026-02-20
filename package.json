@@ -97,7 +97,8 @@
       "installerHeaderIcon": "public/icon.ico",
       "deleteAppDataOnUninstall": false,
       "displayLanguageSelector": false,
-      "include": "build/installer.nsh"
+      "include": "build/installer.nsh",
+      "artifactName": "Verificador-Electoral-Setup-${version}.exe"
     },
     "publish": {
       "provider": "github",

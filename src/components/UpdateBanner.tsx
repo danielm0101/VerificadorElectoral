@@ -3,11 +3,13 @@ interface UpdateBannerProps {
   progress: number | null;
   ready: boolean;
   updateError: string | null;
+  canRetry: boolean;
   onDownload: () => void;
   onInstall: () => void;
+  onManualDownload: () => void;
 }
 
-export default function UpdateBanner({ available, progress, ready, updateError, onDownload, onInstall }: UpdateBannerProps) {
+export default function UpdateBanner({ available, progress, ready, updateError, canRetry, onDownload, onInstall, onManualDownload }: UpdateBannerProps) {
   if (!available && progress === null && !ready && !updateError) return null;
 
   if (ready) {
@@ -28,16 +30,26 @@ export default function UpdateBanner({ available, progress, ready, updateError, 
 
   if (updateError) {
     return (
-      <div className="sticky top-0 z-50 bg-[#2d2557] border-b border-[#ff5a5a] px-6 py-3 flex items-center justify-between">
+      <div className="sticky top-0 z-50 bg-[#2d2557] border-b border-[#ff5a5a] px-6 py-3 flex items-center justify-between gap-3">
         <p className="font-['Poppins',sans-serif] text-[#ff5a5a] text-sm">
-          Error al actualizar. Descarga manualmente la nueva version.
+          Error al actualizar. Descarga e instala manualmente la nueva version.
         </p>
-        <button
-          onClick={onDownload}
-          className="bg-[#ff5a5a] text-white font-['Poppins',sans-serif] font-semibold text-sm px-4 py-1.5 rounded hover:bg-[#e54a4a] transition-colors"
-        >
-          Reintentar
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          {canRetry && (
+            <button
+              onClick={onDownload}
+              className="bg-transparent border border-[#ff5a5a] text-[#ff5a5a] font-['Poppins',sans-serif] font-semibold text-sm px-4 py-1.5 rounded hover:bg-[#ff5a5a]/10 transition-colors"
+            >
+              Reintentar
+            </button>
+          )}
+          <button
+            onClick={onManualDownload}
+            className="bg-[#ff5a5a] text-white font-['Poppins',sans-serif] font-semibold text-sm px-4 py-1.5 rounded hover:bg-[#e54a4a] transition-colors"
+          >
+            Descarga manual
+          </button>
+        </div>
       </div>
     );
   }
@@ -61,16 +73,24 @@ export default function UpdateBanner({ available, progress, ready, updateError, 
 
   if (available) {
     return (
-      <div className="sticky top-0 z-50 bg-[#2d2557] border-b border-[#ffb700] px-6 py-3 flex items-center justify-between">
+      <div className="sticky top-0 z-50 bg-[#2d2557] border-b border-[#ffb700] px-6 py-3 flex items-center justify-between gap-3">
         <p className="font-['Poppins',sans-serif] text-[#f3f3f3] text-sm">
           Nueva version disponible: <span className="font-bold text-[#ffb700]">v{available}</span>
         </p>
-        <button
-          onClick={onDownload}
-          className="bg-[#ffb700] text-[#1a1333] font-['Poppins',sans-serif] font-semibold text-sm px-4 py-1.5 rounded hover:bg-[#e6a600] transition-colors"
-        >
-          Descargar
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={onManualDownload}
+            className="bg-transparent border border-[#ffb700] text-[#ffb700] font-['Poppins',sans-serif] font-semibold text-sm px-4 py-1.5 rounded hover:bg-[#ffb700]/10 transition-colors"
+          >
+            Descarga manual
+          </button>
+          <button
+            onClick={onDownload}
+            className="bg-[#ffb700] text-[#1a1333] font-['Poppins',sans-serif] font-semibold text-sm px-4 py-1.5 rounded hover:bg-[#e6a600] transition-colors"
+          >
+            Descargar
+          </button>
+        </div>
       </div>
     );
   }

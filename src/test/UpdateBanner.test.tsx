@@ -13,8 +13,10 @@ const defaultProps = {
   progress: null,
   ready: false,
   updateError: null,
+  canRetry: true,
   onDownload: vi.fn(),
   onInstall: vi.fn(),
+  onManualDownload: vi.fn(),
 };
 
 describe('UpdateBanner - sin estado activo', () => {
@@ -33,11 +35,21 @@ describe('UpdateBanner - actualización disponible', () => {
     render(<UpdateBanner {...defaultProps} available="1.0.4" />);
     expect(screen.getByRole('button', { name: /Descargar/i })).toBeInTheDocument();
   });
-  it('llama onDownload al hacer click', async () => {
+  it('muestra el botón Descarga manual', () => {
+    render(<UpdateBanner {...defaultProps} available="1.0.4" />);
+    expect(screen.getByRole('button', { name: /Descarga manual/i })).toBeInTheDocument();
+  });
+  it('llama onDownload al hacer click en Descargar', async () => {
     const onDownload = vi.fn();
     render(<UpdateBanner {...defaultProps} available="1.0.4" onDownload={onDownload} />);
-    await userEvent.click(screen.getByRole('button', { name: /Descargar/i }));
+    await userEvent.click(screen.getByRole('button', { name: 'Descargar' }));
     expect(onDownload).toHaveBeenCalledOnce();
+  });
+  it('llama onManualDownload al hacer click en Descarga manual', async () => {
+    const onManualDownload = vi.fn();
+    render(<UpdateBanner {...defaultProps} available="1.0.4" onManualDownload={onManualDownload} />);
+    await userEvent.click(screen.getByRole('button', { name: /Descarga manual/i }));
+    expect(onManualDownload).toHaveBeenCalledOnce();
   });
 });
 
@@ -86,20 +98,34 @@ describe('UpdateBanner - lista para instalar', () => {
   });
 });
 
-describe('UpdateBanner - error de actualización (nuevo en v1.0.3)', () => {
+describe('UpdateBanner - error de actualización', () => {
   it('muestra banner rojo cuando hay error', () => {
     render(<UpdateBanner {...defaultProps} available="1.0.4" updateError="sha512 mismatch" />);
     expect(screen.getByText(/Error al actualizar/i)).toBeInTheDocument();
   });
-  it('muestra botón Reintentar cuando hay error', () => {
-    render(<UpdateBanner {...defaultProps} available="1.0.4" updateError="network error" />);
+  it('muestra botón Reintentar cuando canRetry=true', () => {
+    render(<UpdateBanner {...defaultProps} available="1.0.4" updateError="network error" canRetry={true} />);
     expect(screen.getByRole('button', { name: /Reintentar/i })).toBeInTheDocument();
+  });
+  it('NO muestra botón Reintentar cuando canRetry=false', () => {
+    render(<UpdateBanner {...defaultProps} available="1.0.4" updateError="error" canRetry={false} />);
+    expect(screen.queryByRole('button', { name: /Reintentar/i })).not.toBeInTheDocument();
+  });
+  it('siempre muestra Descarga manual cuando hay error', () => {
+    render(<UpdateBanner {...defaultProps} available="1.0.4" updateError="error" canRetry={false} />);
+    expect(screen.getByRole('button', { name: /Descarga manual/i })).toBeInTheDocument();
   });
   it('llama onDownload al hacer click en Reintentar', async () => {
     const onDownload = vi.fn();
     render(<UpdateBanner {...defaultProps} available="1.0.4" updateError="error" onDownload={onDownload} />);
     await userEvent.click(screen.getByRole('button', { name: /Reintentar/i }));
     expect(onDownload).toHaveBeenCalledOnce();
+  });
+  it('llama onManualDownload al hacer click en Descarga manual', async () => {
+    const onManualDownload = vi.fn();
+    render(<UpdateBanner {...defaultProps} available="1.0.4" updateError="error" onManualDownload={onManualDownload} />);
+    await userEvent.click(screen.getByRole('button', { name: /Descarga manual/i }));
+    expect(onManualDownload).toHaveBeenCalledOnce();
   });
   it('error tiene prioridad sobre progreso', () => {
     render(<UpdateBanner {...defaultProps} available="1.0.4" progress={100} updateError="error" />);
