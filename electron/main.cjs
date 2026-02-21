@@ -170,6 +170,10 @@ function setupAutoUpdater() {
     fs.mkdirSync(updatesDir, { recursive: true });
   }
   autoUpdater.cachePath = updatesDir;
+  // Deshabilitar descarga diferencial — fuerza descarga completa del instalador.
+  // Evita errores de SHA512 al saltar versiones (ej: v1.0.6 → v1.0.8) donde
+  // el blockmap de la versión anterior no coincide con la nueva.
+  autoUpdater.disableDifferentialDownload = true;
 
   // Asegurar exclusión de Defender para la carpeta de Updates
   // (cubre casos donde el instalador anterior no aplicó las exclusiones correctamente)
