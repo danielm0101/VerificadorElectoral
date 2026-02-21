@@ -214,6 +214,13 @@ export default function App() {
           setArchivosFallidos(prev => [...prev, { archivo: evento.archivo || '', ruta: evento.ruta || '', error: errorClasificado.mensaje }]);
           break;
         }
+        case 'error': {
+          const errorCritico = clasificarError(evento.mensaje || 'Error desconocido');
+          setErrorDetectado(errorCritico);
+          setMensajeEstado(errorCritico.mensaje.split('.')[0]);
+          window.electronAPI?.cancelarProcesoR();
+          break;
+        }
         case 'lote_guardado':
           setCsvsGenerados(prev => [...prev, evento.nombre || '']);
           setMensajeEstado(`CSV guardado: ${evento.nombre}`);

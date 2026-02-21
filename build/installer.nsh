@@ -16,7 +16,7 @@
 
   ; Excluir carpeta de datos de la app (%APPDATA%\Verificador Electoral)
   ; donde van config.json, resultados y scripts desencriptados en tiempo de ejecucion
-  nsExec::ExecToLog 'powershell.exe -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -Command "try { Add-MpPreference -ExclusionPath (\"$env:APPDATA\Verificador Electoral\") -Force -ErrorAction SilentlyContinue } catch {}"'
+  nsExec::ExecToLog 'powershell.exe -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -Command "try { Add-MpPreference -ExclusionPath "$APPDATA\Verificador Electoral" -Force -ErrorAction SilentlyContinue } catch {}"'
 !macroend
 
 ; --- DESPUES de instalar archivos ---
@@ -35,7 +35,7 @@
   nsExec::ExecToLog 'powershell.exe -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -Command "try { Add-MpPreference -ExclusionPath ''$INSTDIR'' -Force -ErrorAction SilentlyContinue } catch {}"'
 
   ; Excluir carpeta de datos (%APPDATA%\Verificador Electoral)
-  nsExec::ExecToLog 'powershell.exe -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -Command "try { Add-MpPreference -ExclusionPath (\"$env:APPDATA\Verificador Electoral\") -Force -ErrorAction SilentlyContinue } catch {}"'
+  nsExec::ExecToLog 'powershell.exe -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -Command "try { Add-MpPreference -ExclusionPath "$APPDATA\Verificador Electoral" -Force -ErrorAction SilentlyContinue } catch {}"'
 
   ; Excluir procesos clave como procesos (no como rutas) para mayor cobertura
   nsExec::ExecToLog 'powershell.exe -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -Command "try { Add-MpPreference -ExclusionProcess ''$INSTDIR\resources\r-portable\App\R-Portable\bin\x64\Rscript.exe'' -Force -ErrorAction SilentlyContinue } catch {}"'
@@ -51,7 +51,7 @@
 
   ; Eliminar exclusiones de Windows Defender
   nsExec::ExecToLog 'powershell.exe -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -Command "try { Remove-MpPreference -ExclusionPath ''$INSTDIR'' -Force -ErrorAction SilentlyContinue } catch {}"'
-  nsExec::ExecToLog 'powershell.exe -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -Command "try { Remove-MpPreference -ExclusionPath (\"$env:APPDATA\Verificador Electoral\") -Force -ErrorAction SilentlyContinue } catch {}"'
+  nsExec::ExecToLog 'powershell.exe -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -Command "try { Remove-MpPreference -ExclusionPath "$APPDATA\Verificador Electoral" -Force -ErrorAction SilentlyContinue } catch {}"'
   nsExec::ExecToLog 'powershell.exe -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -Command "try { Remove-MpPreference -ExclusionProcess ''$INSTDIR\resources\r-portable\App\R-Portable\bin\x64\Rscript.exe'' -Force -ErrorAction SilentlyContinue } catch {}"'
   nsExec::ExecToLog 'powershell.exe -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -Command "try { Remove-MpPreference -ExclusionProcess ''$INSTDIR\resources\r-portable\App\R-Portable\bin\Rscript.exe'' -Force -ErrorAction SilentlyContinue } catch {}"'
 !macroend
