@@ -77,7 +77,7 @@ declare global {
       abrirURL: (url: string) => Promise<boolean>;
       guardarConfiguracion: (config: object) => Promise<boolean>;
       cargarConfiguracion: () => Promise<object | null>;
-      verificarR: () => Promise<{ disponible: boolean; ruta: string }>;
+      verificarR: () => Promise<{ disponible: boolean; ruta: string; version: string | null }>;
       cancelarProcesoR: () => Promise<{ success: boolean; error?: string }>;
       convertirPDFaCSVv2: (params: {
         archivos: string[];

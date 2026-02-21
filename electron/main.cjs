@@ -442,14 +442,23 @@ function obtenerCarpetaSalida() {
   return path.join(app.getPath('userData'), 'Resultados');
 }
 
-// Verificar si R está disponible
+// Verificar si R está disponible (ejecuta Rscript --version realmente)
 ipcMain.handle('verificar-r', async () => {
   const rPath = obtenerRutaR();
   const existe = fs.existsSync(rPath) || rPath === 'Rscript';
-  return {
-    disponible: existe,
-    ruta: rPath
-  };
+  if (!existe) return { disponible: false, ruta: rPath, version: null };
+
+  return new Promise((resolve) => {
+    const proc = spawn(rPath, ['--version'], { timeout: 10000 });
+    let out = '';
+    proc.stdout.on('data', d => { out += d.toString(); });
+    proc.stderr.on('data', d => { out += d.toString(); }); // R imprime version en stderr
+    proc.on('close', (code) => {
+      const match = out.match(/R version [\d.]+/);
+      resolve({ disponible: code === 0, ruta: rPath, version: match ? match[0] : out.trim().split('\n')[0] });
+    });
+    proc.on('error', () => resolve({ disponible: false, ruta: rPath, version: null }));
+  });
 });
 
 // ============================================
@@ -598,7 +607,12 @@ ipcMain.handle('convertir-pdf-csv-v2', async (event, { archivos, apiKey, modo = 
       });
 
       rProcess.stderr.on('data', (data) => {
-        console.error('[R Error]', data.toString().trim());
+        const msg = data.toString().trim();
+        if (!msg) return;
+        console.error('[R Error]', msg);
+        if (mainWindow) {
+          mainWindow.webContents.send('r-evento', { tipo: 'error', mensaje: msg });
+        }
       });
 
       rProcess.on('close', (code) => {
@@ -638,6 +652,16 @@ ipcMain.handle('convertir-pdf-csv-v2', async (event, { archivos, apiKey, modo = 
           fs.unlinkSync(manifiestoPath);
         } catch (e) {}
 
+        // Si R terminó mal y no dejó log ni evento final, avisar al frontend
+        if (code !== 0 && !procesoLog && !resultadoFinal) {
+          if (mainWindow) {
+            mainWindow.webContents.send('r-evento', {
+              tipo: 'error',
+              mensaje: `R terminó inesperadamente (código ${code}). Puede que falte memoria, R Portable esté dañado, o falte una dependencia.`
+            });
+          }
+        }
+
         resolve({
           success: code === 0,
           code,
@@ -649,6 +673,12 @@ ipcMain.handle('convertir-pdf-csv-v2', async (event, { archivos, apiKey, modo = 
 
       rProcess.on('error', (err) => {
         console.error('Error ejecutando R:', err);
+        if (mainWindow) {
+          mainWindow.webContents.send('r-evento', {
+            tipo: 'error',
+            mensaje: `No se pudo iniciar R: ${err.message}. Verifica que R Portable esté instalado correctamente.`
+          });
+        }
         resolve({
           success: false,
           error: err.message

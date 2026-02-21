@@ -170,7 +170,10 @@ export default function App() {
     if (!window.electronAPI) return;
 
     const rStatus = await window.electronAPI.verificarR();
-    if (!rStatus.disponible) { alert('R Portable no esta disponible. Verifica la instalacion.'); return; }
+    if (!rStatus.disponible) {
+      alert(`R Portable no responde o no tiene permisos de ejecucion.\n\nRuta: ${rStatus.ruta}\n\nReinstala la aplicacion o contacta soporte.`);
+      return;
+    }
 
     setConversionEnProgreso(true);
     setConversionCompleta(false);
