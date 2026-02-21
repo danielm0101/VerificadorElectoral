@@ -610,7 +610,10 @@ ipcMain.handle('convertir-pdf-csv-v2', async (event, { archivos, apiKey, modo = 
       rProcess.stderr.on('data', (data) => {
         const msg = data.toString().trim();
         if (!msg) return;
-        console.error('[R Error]', msg);
+        console.error('[R stderr]', msg);
+        // Filtrar mensajes informativos de R/pdftools que van a stderr pero NO son errores
+        const esInformativo = /using poppler version|loading required package|attaching package|package .* was built|there is no package called 'tcltk'|namespace .* already present|^>/i.test(msg);
+        if (esInformativo) return;
         stderrAccumulado += (stderrAccumulado ? '\n' : '') + msg;
         if (mainWindow) {
           mainWindow.webContents.send('r-evento', { tipo: 'error', mensaje: msg });
