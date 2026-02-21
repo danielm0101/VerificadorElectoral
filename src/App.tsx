@@ -36,6 +36,14 @@ export default function App() {
 
   const [seccionActiva, setSeccionActiva] = useState<Seccion>('informacion');
 
+  // Cuando el tier llega desde la USB, redirigir a la primera pestaña visible si la actual no pertenece al tier
+  useEffect(() => {
+    const visibles = getVisibleTabs(securityTier);
+    if (!visibles.includes(seccionActiva)) {
+      setSeccionActiva(visibles[0]);
+    }
+  }, [securityTier]);
+
   // Identification state - synced with useElectronConfig
   const { tipoEleccion, circunscripcion, departamento, municipio, zona, keyAsignada } = config;
   const setField = (field: string) => (value: string) => setConfig(prev => ({ ...prev, [field]: value }));
