@@ -165,6 +165,34 @@ export function clasificarError(error: string): { tipo: TipoError; mensaje: stri
     };
   }
 
+  // PYTHON / OPENCV NO DISPONIBLE
+  if (
+    e.includes('python') ||
+    e.includes('opencv') ||
+    e.includes('cv2') ||
+    e.includes('numpy') ||
+    e.includes('no se pudo cargar cv2') ||
+    e.includes('reticulate') ||
+    e.includes('pip install')
+  ) {
+    return {
+      tipo: 'otro',
+      mensaje: 'Python o sus dependencias (cv2/numpy) no estan disponibles. Instala Python 3.x y ejecuta: pip install opencv-python numpy'
+    };
+  }
+
+  // PAQUETE R FALTANTE
+  if (
+    e.includes('no package called') ||
+    e.includes('there is no package') ||
+    e.includes('package') && e.includes('not found')
+  ) {
+    return {
+      tipo: 'otro',
+      mensaje: 'Falta una dependencia de R. Verifica tu conexion a internet y vuelve a intentar (se instalara automaticamente).'
+    };
+  }
+
   // ERROR DESCONOCIDO
   return {
     tipo: 'otro',

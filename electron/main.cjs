@@ -573,6 +573,7 @@ ipcMain.handle('convertir-pdf-csv-v2', async (event, { archivos, apiKey, modo = 
       });
 
       let resultadoFinal = null;
+      let stderrAccumulado = ''; // Acumular stderr para incluirlo en el resolve (evita race condition)
       procesoRActual = rProcess; // Guardar referencia para poder cancelar
       let stdoutBufferV2 = ''; // Buffer para manejar JSON parcial entre chunks
 
@@ -610,6 +611,7 @@ ipcMain.handle('convertir-pdf-csv-v2', async (event, { archivos, apiKey, modo = 
         const msg = data.toString().trim();
         if (!msg) return;
         console.error('[R Error]', msg);
+        stderrAccumulado += (stderrAccumulado ? '\n' : '') + msg;
         if (mainWindow) {
           mainWindow.webContents.send('r-evento', { tipo: 'error', mensaje: msg });
         }
@@ -652,12 +654,15 @@ ipcMain.handle('convertir-pdf-csv-v2', async (event, { archivos, apiKey, modo = 
           fs.unlinkSync(manifiestoPath);
         } catch (e) {}
 
-        // Si R terminó mal y no dejó log ni evento final, avisar al frontend
-        if (code !== 0 && !procesoLog && !resultadoFinal) {
+        // Determinar si hubo error crítico (independiente del race condition de eventos IPC)
+        let criticalError = null;
+        if (code !== 0) {
+          criticalError = stderrAccumulado ||
+            `R terminó inesperadamente (código ${code}). Puede que falte Python, falte una dependencia, o R Portable esté dañado.`;
           if (mainWindow) {
             mainWindow.webContents.send('r-evento', {
               tipo: 'error',
-              mensaje: `R terminó inesperadamente (código ${code}). Puede que falte memoria, R Portable esté dañado, o falte una dependencia.`
+              mensaje: criticalError
             });
           }
         }
@@ -667,21 +672,21 @@ ipcMain.handle('convertir-pdf-csv-v2', async (event, { archivos, apiKey, modo = 
           code,
           outputDir,
           procesoLog,
-          resultadoFinal
+          resultadoFinal,
+          criticalError
         });
       });
 
       rProcess.on('error', (err) => {
         console.error('Error ejecutando R:', err);
+        const errMsg = `No se pudo iniciar R: ${err.message}. Verifica que R Portable esté instalado correctamente.`;
         if (mainWindow) {
-          mainWindow.webContents.send('r-evento', {
-            tipo: 'error',
-            mensaje: `No se pudo iniciar R: ${err.message}. Verifica que R Portable esté instalado correctamente.`
-          });
+          mainWindow.webContents.send('r-evento', { tipo: 'error', mensaje: errMsg });
         }
         resolve({
           success: false,
-          error: err.message
+          error: errMsg,
+          criticalError: errMsg
         });
       });
 

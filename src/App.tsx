@@ -263,6 +263,13 @@ export default function App() {
         setMostrarModal(true);
         return;
       }
+      // Fix race condition: si R falló pero el error IPC llegó tarde (microtask vs macrotask),
+      // usar criticalError del resolve que siempre llega sincrónicamente con el resultado
+      if (!resultado.success && resultado.criticalError && !errorDetectado) {
+        setErrorDetectado(clasificarError(resultado.criticalError));
+        setMostrarModal(true);
+        return;
+      }
       if (resultado.procesoLog) {
         if (!esReintento) {
           setArchivosExitosos(resultado.procesoLog.exitosos || []);

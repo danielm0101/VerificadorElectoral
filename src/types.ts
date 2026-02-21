@@ -96,6 +96,8 @@ declare global {
           estadisticas: { total: number; ok: number; error: number; tasa_exito: number };
         };
         error?: string;
+        criticalError?: string | null;
+        resultadoFinal?: object | null;
       }>;
       fusionarCSVs: () => Promise<{ success: boolean; archivoFinal?: string; error?: string }>;
       leerLogProceso: () => Promise<object | null>;
