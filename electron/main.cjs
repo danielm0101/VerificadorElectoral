@@ -611,9 +611,18 @@ ipcMain.handle('convertir-pdf-csv-v2', async (event, { archivos, apiKey, modo = 
         const msg = data.toString().trim();
         if (!msg) return;
         console.error('[R stderr]', msg);
-        // Filtrar mensajes informativos de R/pdftools que van a stderr pero NO son errores
-        const esInformativo = /using poppler version|loading required package|attaching package|package .* was built|there is no package called 'tcltk'|namespace .* already present|^>/i.test(msg);
-        if (esInformativo) return;
+        // Filtrar mensajes informativos de R/paquetes que van a stderr pero NO son errores reales.
+        // Solo tratar como error si el mensaje contiene indicadores explícitos de error.
+        const esErrorReal = /^error[\s:]/i.test(msg) ||
+          /^warning:/i.test(msg) ||
+          msg.toLowerCase().includes('no package called') ||
+          msg.toLowerCase().includes('cannot open file') ||
+          msg.toLowerCase().includes('no such file') ||
+          msg.toLowerCase().includes('could not find function') ||
+          msg.toLowerCase().includes('subscript out of bounds') ||
+          msg.toLowerCase().includes('object not found') ||
+          msg.toLowerCase().includes('fatal error');
+        if (!esErrorReal) return;
         stderrAccumulado += (stderrAccumulado ? '\n' : '') + msg;
         if (mainWindow) {
           mainWindow.webContents.send('r-evento', { tipo: 'error', mensaje: msg });
