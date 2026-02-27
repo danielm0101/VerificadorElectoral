@@ -31,9 +31,12 @@ export default function UpdateBanner({ available, progress, ready, updateError, 
   if (updateError) {
     return (
       <div className="sticky top-0 z-50 bg-[#2d2557] border-b border-[#ff5a5a] px-6 py-3 flex items-center justify-between gap-3">
-        <p className="font-['Poppins',sans-serif] text-[#ff5a5a] text-sm">
-          Error al actualizar. Descarga e instala manualmente la nueva version.
-        </p>
+        <div>
+          <p className="font-['Poppins',sans-serif] text-[#ff5a5a] text-sm">
+            Error al actualizar. Descarga e instala manualmente la nueva version.
+          </p>
+          <p className="font-['Poppins',sans-serif] text-[#ff5a5a]/70 text-xs mt-0.5 font-mono">{updateError}</p>
+        </div>
         <div className="flex items-center gap-2 shrink-0">
           {canRetry && (
             <button
@@ -64,7 +67,7 @@ export default function UpdateBanner({ available, progress, ready, updateError, 
         <div className="w-full bg-[#40376d] rounded-full h-2">
           <div
             className={`h-2 rounded-full transition-all duration-300 ${verificando ? 'bg-[#00c853] animate-pulse' : 'bg-[#ffb700]'}`}
-            style={{ width: '100%' }}
+            style={{ width: `${progress}%` }}
           />
         </div>
       </div>

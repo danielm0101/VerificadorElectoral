@@ -36,10 +36,13 @@ export function useAutoUpdate() {
     };
   }, []);
 
-  const download = () => {
+  const download = async () => {
     setDownloadAttempts(c => c + 1);
     setUpdateError(null);
-    window.electronAPI?.descargarActualizacion();
+    const result = await window.electronAPI?.descargarActualizacion();
+    if (result && !result.success) {
+      setUpdateError(result.error || 'Error desconocido al iniciar descarga');
+    }
   };
 
   const install = () => window.electronAPI?.instalarActualizacion();

