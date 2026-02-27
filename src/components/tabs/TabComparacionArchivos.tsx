@@ -22,71 +22,87 @@ export default function TabComparacionArchivos({
   archivoCSV, carpetaMMV, comparacionEnProgreso, comparacionCompleta,
   progresoComparacion, errorComparacion, resultadoComparacion, discrepanciasDetalle,
   onSeleccionarCSV, onSeleccionarMMV, onGenerarComparacion,
-  onCancelarProceso, onDescargarResultados, onContinuar
+  onCancelarProceso, onDescargarResultados
 }: TabComparacionArchivosProps) {
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-20 animate-fadeIn max-w-[1000px] mx-auto">
-        {/* Columna 1: Subir archivos */}
-        <div className="max-w-[380px]">
-          <div className="flex items-center gap-3 mb-4">
-            <StepBadge number={5} color="#ff8c42" />
-            <p className="font-['Poppins',sans-serif] font-medium text-[#40376d] text-lg">
-              Sube el archivo CSV generado y el MMV de la E-24 que descargaste.
+        {/* Columna 1: Pasos 1 y 2 */}
+        <div className="max-w-[380px] space-y-6">
+          {/* Paso 1 */}
+          <div>
+            <div className="flex items-start gap-3 mb-3">
+              <StepBadge number={1} color="#ff5a5a" />
+              <p className="font-['Poppins',sans-serif] font-medium text-[#40376d] text-lg leading-relaxed">
+                Ingresa a la carpeta de Drive de cada zona y descarga los archivos TOTALES_MIGA_DE_PAN. CSV y los archivos MMV.
+              </p>
+            </div>
+            <p className="font-['Poppins',sans-serif] text-[#ff5a5a] text-base italic leading-relaxed ml-1">
+              La persona que se encargó de la preparación te indicará cuando los archivos se encuentren subidos en la carpeta.
             </p>
           </div>
 
-          <button
-            onClick={onSeleccionarCSV}
-            className={`w-full h-[114px] rounded-[8px] transition-colors cursor-pointer drop-zone border-2 ${
-              archivoCSV
-                ? 'bg-[#ff8c42]/10 border-[#ff8c42]'
-                : 'bg-[#d9d9d9] border-black border-dashed hover:bg-[#c9c9c9]'
-            }`}
-          >
-            {archivoCSV ? (
-              <div className="flex flex-col items-center gap-2 px-4">
-                <svg className="w-7 h-7 text-[#ff8c42]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <span className="font-['Poppins',sans-serif] text-sm font-semibold text-[#ff8c42]">CSV SELECCIONADO</span>
-                <span className="font-['Inter',sans-serif] text-xs text-[#40376d] truncate max-w-full px-2">
-                  {archivoCSV.split(/[/\\]/).pop()}
-                </span>
-              </div>
-            ) : (
-              <span className="font-['Poppins',sans-serif] text-[22px] text-black">Seleccionar archivo CSV</span>
-            )}
-          </button>
+          {/* Paso 2 */}
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <StepBadge number={2} color="#ff5a5a" />
+              <p className="font-['Poppins',sans-serif] font-medium text-[#40376d] text-lg">
+                Sube los archivos "todoscsv.CSV" y MMV de las E-24.
+              </p>
+            </div>
 
-          <button
-            onClick={onSeleccionarMMV}
-            className={`w-full h-[114px] rounded-[8px] transition-colors cursor-pointer mt-4 drop-zone border-2 ${
-              carpetaMMV
-                ? 'bg-[#ff8c42]/10 border-[#ff8c42]'
-                : 'bg-[#d9d9d9] border-black border-dashed hover:bg-[#c9c9c9]'
-            }`}
-          >
-            {carpetaMMV ? (
-              <div className="flex flex-col items-center gap-2 px-4">
-                <svg className="w-7 h-7 text-[#ff8c42]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <span className="font-['Poppins',sans-serif] text-sm font-semibold text-[#ff8c42]">MMV SELECCIONADO</span>
-                <span className="font-['Inter',sans-serif] text-xs text-[#40376d] truncate max-w-full px-2">
-                  {carpetaMMV.split(/[/\\]/).pop()}
-                </span>
-              </div>
-            ) : (
-              <span className="font-['Poppins',sans-serif] text-[22px] text-black">Seleccionar MMV DE E-24</span>
-            )}
-          </button>
+            <button
+              onClick={onSeleccionarCSV}
+              className={`w-full h-[114px] rounded-[8px] transition-colors cursor-pointer drop-zone border-2 ${
+                archivoCSV
+                  ? 'bg-[#ff5a5a]/10 border-[#ff5a5a]'
+                  : 'bg-[#d9d9d9] border-black border-dashed hover:bg-[#c9c9c9]'
+              }`}
+            >
+              {archivoCSV ? (
+                <div className="flex flex-col items-center gap-2 px-4">
+                  <svg className="w-7 h-7 text-[#ff5a5a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="font-['Poppins',sans-serif] text-sm font-semibold text-[#ff5a5a]">CSV SELECCIONADO</span>
+                  <span className="font-['Inter',sans-serif] text-xs text-[#40376d] truncate max-w-full px-2">
+                    {archivoCSV.split(/[/\\]/).pop()}
+                  </span>
+                </div>
+              ) : (
+                <span className="font-['Poppins',sans-serif] text-[22px] text-black">Seleccionar archivo CSV</span>
+              )}
+            </button>
+
+            <button
+              onClick={onSeleccionarMMV}
+              className={`w-full h-[114px] rounded-[8px] transition-colors cursor-pointer mt-4 drop-zone border-2 ${
+                carpetaMMV
+                  ? 'bg-[#ff5a5a]/10 border-[#ff5a5a]'
+                  : 'bg-[#d9d9d9] border-black border-dashed hover:bg-[#c9c9c9]'
+              }`}
+            >
+              {carpetaMMV ? (
+                <div className="flex flex-col items-center gap-2 px-4">
+                  <svg className="w-7 h-7 text-[#ff5a5a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="font-['Poppins',sans-serif] text-sm font-semibold text-[#ff5a5a]">MMV SELECCIONADO</span>
+                  <span className="font-['Inter',sans-serif] text-xs text-[#40376d] truncate max-w-full px-2">
+                    {carpetaMMV.split(/[/\\]/).pop()}
+                  </span>
+                </div>
+              ) : (
+                <span className="font-['Poppins',sans-serif] text-[22px] text-black">Seleccionar  MMV DE E-24</span>
+              )}
+            </button>
+          </div>
         </div>
 
-        {/* Columna 2: Generar comparacion */}
+        {/* Columna 2: Paso 3 */}
         <div className="max-w-[380px]">
           <div className="flex items-center gap-3 mb-4">
-            <StepBadge number={6} color="#ff8c42" />
+            <StepBadge number={3} color="#ff5a5a" />
             <p className="font-['Poppins',sans-serif] font-medium text-[#40376d] text-lg">
               Crea el archivo de comparacion.
             </p>
@@ -117,8 +133,8 @@ export default function TabComparacionArchivos({
 
           {progresoComparacion > 0 && (
             <div className="mt-4">
-              <div className="w-full bg-white border border-[#ff8c42] rounded-[8px] h-[17px] overflow-hidden">
-                <div className="h-full bg-[#ff8c42] rounded-[8px] transition-all duration-300" style={{ width: `${progresoComparacion}%` }} />
+              <div className="w-full bg-white border border-[#ff5a5a] rounded-[8px] h-[17px] overflow-hidden">
+                <div className="h-full bg-[#ff5a5a] rounded-[8px] transition-all duration-300" style={{ width: `${progresoComparacion}%` }} />
               </div>
               <p className="font-['Inter',sans-serif] text-black text-[15px] mt-2 text-right">{progresoComparacion}%</p>
             </div>
@@ -132,7 +148,7 @@ export default function TabComparacionArchivos({
 
           {comparacionCompleta && resultadoComparacion && (
             <div className="mt-4 space-y-3">
-              <div className="p-3 bg-white border border-[#ff8c42] rounded-lg space-y-1">
+              <div className="p-3 bg-white border border-[#ff5a5a] rounded-lg space-y-1">
                 <p className="font-['Poppins',sans-serif] text-sm text-gray-700">
                   Comparados: <span className="font-bold">{resultadoComparacion.total_registros}</span> |
                   Coinciden: <span className="font-bold text-green-700">{resultadoComparacion.total_coinciden}</span> ({resultadoComparacion.porcentaje_coinciden}%) |
@@ -148,8 +164,11 @@ export default function TabComparacionArchivos({
                 onClick={onDescargarResultados}
                 className="w-full h-[50px] bg-[#d9d9d9] rounded-[8px] hover:bg-[#c9c9c9] transition-colors cursor-pointer"
               >
-                <span className="font-['Poppins',sans-serif] font-medium text-lg text-black">DESCARGAR CSV COMPLETO</span>
+                <span className="font-['Poppins',sans-serif] font-medium text-lg text-black">DESCARGAR</span>
               </button>
+              <p className="font-['Poppins',sans-serif] text-[#ff5a5a] text-sm leading-relaxed">
+                Avisale a la persona con la zona asignada, que ya se encuentra el archivo de comparación listo para realizar la verificación manual.
+              </p>
             </div>
           )}
         </div>
@@ -204,15 +223,6 @@ export default function TabComparacionArchivos({
           </div>
         </div>
       )}
-
-      <div className="flex justify-end mt-8">
-        <button
-          onClick={onContinuar}
-          className="h-[53px] w-[226px] bg-[#ff8c42] rounded-[8px] hover:bg-[#e07a35] transition-colors cursor-pointer"
-        >
-          <span className="font-['Poppins',sans-serif] font-semibold text-white text-2xl tracking-wider">CONTINUAR</span>
-        </button>
-      </div>
     </>
   );
 }

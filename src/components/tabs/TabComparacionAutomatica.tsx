@@ -1,4 +1,5 @@
 import Checkbox from '../Checkbox';
+import StepBadge from '../StepBadge';
 
 interface TabComparacionAutomaticaProps {
   checkMigaPan: boolean;
@@ -39,12 +40,27 @@ export default function TabComparacionAutomatica({
               </p>
             </div>
           </div>
+
+          <div className="flex items-start gap-4">
+            <StepBadge number={3} color="#ff5a5a" />
+            <div>
+              <p className="font-['Poppins',sans-serif] font-medium text-[#40376d] text-lg leading-relaxed">
+                En drive, abre el documento con "hojas de calculo de google"
+              </p>
+              <button
+                onClick={onMostrarGuiaDrive}
+                className="font-['Poppins',sans-serif] text-[#11d0d0] text-base italic hover:underline transition-colors cursor-pointer mt-1"
+              >
+                ¿Cómo abrir el doc en "hojas de calculo de google"?
+              </button>
+            </div>
+          </div>
         </div>
 
         <div className="flex flex-col justify-between">
           <div>
             <p className="font-['Poppins',sans-serif] font-bold text-[#ff5a5a] text-sm tracking-wider leading-relaxed uppercase">
-              SI YA CUENTAS CON LA SIGUIENTE INFORMACIÓN, PUEDES CONTINUAR A LA COMPARACIÓN MANUAL:
+              SI YA CUENTAS CON LA SIGUIENTE INFORMACIÓN, PUEDES CONTINUAR A LA REVISIÓN EN CANCHA:
             </p>
             <div className="mt-5">
               <Checkbox
@@ -69,14 +85,6 @@ export default function TabComparacionAutomatica({
         </div>
       </div>
 
-      <div className="flex justify-center mt-8 max-w-[1100px] mx-auto">
-        <button
-          onClick={onMostrarGuiaDrive}
-          className="font-['Poppins',sans-serif] text-[#11d0d0] text-base font-semibold hover:underline transition-colors cursor-pointer"
-        >
-          En Drive, abre el documento con "hojas de calculo de google"
-        </button>
-      </div>
     </>
   );
 }

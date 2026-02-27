@@ -17,7 +17,7 @@ export default function TabInformacion({
   onCheckZonas, onCheckKey, onCheckE14,
   onMostrarEjemploFormatos, onContinuar
 }: TabInformacionProps) {
-  const [paso0Abierto, setPaso0Abierto] = useState(false);
+  const [opcionAAbierta, setOpcionAAbierta] = useState(true);
   const checklistCompleto = checkZonas && checkKey && checkE14;
 
   return (
@@ -31,28 +31,30 @@ export default function TabInformacion({
 
           <button
             onClick={onMostrarEjemploFormatos}
-            className="font-['Poppins',sans-serif] text-[#11d0d0] text-base font-semibold hover:underline transition-colors cursor-pointer mb-6 block"
+            className="font-['Poppins',sans-serif] text-[#ffb700] text-base font-semibold hover:underline transition-colors cursor-pointer mb-6 block"
           >
             Ver ejemplo de formatos
           </button>
 
           <p className="font-['Poppins',sans-serif] text-[#40376d] text-base mb-3">
-            Este proceso esta dividido en dos fases:
+            Este proceso esta divido en dos fases:
           </p>
 
-          <p className="font-['Poppins',sans-serif] font-bold text-[#ffb700] text-lg mb-2">FASE 1</p>
+          <p className="font-['Poppins',sans-serif] font-bold text-[#ff5a5a] text-lg mb-2">FASE 1</p>
 
           <p className="font-['Poppins',sans-serif] font-bold text-[#40376d] text-base mb-1">
             Comparacion automatica:
           </p>
           <p className="font-['Poppins',sans-serif] text-[#40376d] text-base leading-relaxed mb-4">
-            un software lee la informacion de cada uno de los formatos, unifica la informacion en un archivo, compara y muestra si hay alguna diferencia de votos. Para que esto suceda, debes entregarle los dos tipos de formato al software, de una forma ordenada.
+            un software lee la informacion de cada uno de los formatos, unifica la informacion en un archivo, compara y muestra si hay alguna diferencia de votos.
           </p>
 
-          <p className="font-['Poppins',sans-serif] text-[#40376d] text-base mb-3">Para esto:</p>
+          <p className="font-['Poppins',sans-serif] text-[#40376d] text-base mb-3">
+            Para que esto suceda, es necesario identificar y alistar los archivos que se van a entregar al software, siguiendo estos pasos:
+          </p>
 
           <p className="font-['Poppins',sans-serif] font-semibold text-[#11d0d0] text-base mb-2">
-            Solicita al lider que te indique:
+            1. Solicita al lider que te indique:
           </p>
           <ul className="font-['Poppins',sans-serif] text-[#40376d] text-base space-y-1 list-disc list-inside ml-1">
             <li>Cuales zonas te corresponden verificar</li>
@@ -63,39 +65,39 @@ export default function TabInformacion({
         {/* COLUMNA 2: Preparar archivos */}
         <div>
           <p className="font-['Poppins',sans-serif] font-bold text-[#11d0d0] text-base mb-4">
-            Prepara los archivos:
+            2. Prepara los archivos:
           </p>
 
           <div className="flex items-start gap-3 mb-5">
-            <div className="w-8 h-8 rounded-full bg-[#11d0d0] flex items-center justify-center flex-shrink-0 mt-0.5">
+            <div className="w-8 h-8 rounded-full bg-[#ffb700] flex items-center justify-center flex-shrink-0 mt-0.5">
               <span className="text-white font-bold text-sm">!</span>
             </div>
             <p className="font-['Poppins',sans-serif] text-[#40376d] text-base italic leading-relaxed">
-              Inicia con el paso 0, solamente si el lider lo indica, de lo contrario continua con el paso 1.
+              Inicia con el Opción A, solamente si el lider lo indica, de lo contrario continua con la opción B.
             </p>
           </div>
 
-          {/* Paso 0 - Desplegable */}
-          <div className="border border-[#ffb700] rounded-[8px] overflow-hidden mb-5">
+          {/* OPCIÓN A - Desplegable */}
+          <div className="border border-[#11d0d0] rounded-[8px] overflow-hidden mb-5">
             <button
-              onClick={() => setPaso0Abierto(!paso0Abierto)}
-              className="w-full flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-[#fffdf5] transition-colors"
+              onClick={() => setOpcionAAbierta(!opcionAAbierta)}
+              className="w-full flex items-center justify-between px-4 py-3 cursor-pointer bg-[#11d0d0] hover:bg-[#0db8b8] transition-colors"
             >
-              <p className="font-['Poppins',sans-serif] font-bold text-[#11d0d0] text-base">Paso 0</p>
+              <p className="font-['Poppins',sans-serif] font-bold text-white text-base">OPCIÓN A</p>
               <svg
-                className={`w-5 h-5 text-[#ffb700] transition-transform duration-200 ${paso0Abierto ? '' : 'rotate-180'}`}
+                className={`w-5 h-5 text-white transition-transform duration-200 ${opcionAAbierta ? 'rotate-180' : ''}`}
                 fill="none" stroke="currentColor" viewBox="0 0 24 24"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </button>
 
-            {paso0Abierto && (
-              <div className="px-4 pb-4 border-t border-[#ffb700]/30">
+            {opcionAAbierta && (
+              <div className="px-4 pb-4 border-t border-[#11d0d0]/30">
                 <ul className="font-['Poppins',sans-serif] text-[#40376d] text-base space-y-3 mt-3">
                   <li>· Descarga la carpeta del Drive con el nombre de las zonas que te fueron asignadas. Guardala de manera que la puedas encontrar facilmente.</li>
                   <li>· Ingresa a la página de la registraduría ... (Ubicación) y descarga todas las E-14 de las zonas que te corresponden. Guardarlas en la carpeta que descargaste anteriormente.</li>
-                  <li>· Sube la carpeta al drive con E-14 que guardaste.</li>
+                  <li>· Sube la carpeta al drive con los formatos E-14 que guardaste.</li>
                   <li>· Ten en cuenta que estas son las carpetas que vas a utilizar en los siguientes pasos.</li>
                 </ul>
               </div>
@@ -103,7 +105,7 @@ export default function TabInformacion({
           </div>
 
           <div>
-            <p className="font-['Poppins',sans-serif] font-bold text-[#11d0d0] text-base mb-2">Paso 1</p>
+            <p className="font-['Poppins',sans-serif] font-bold text-[#11d0d0] text-base mb-2">OPCIÓN B</p>
             <p className="font-['Poppins',sans-serif] text-[#40376d] text-base leading-relaxed">
               Descarga las carpetas E-14 de las zonas que te fueron asignadas por el lider. Estas carpetas se encuentran en (DRIVE)
             </p>
@@ -134,7 +136,7 @@ export default function TabInformacion({
           disabled={!checklistCompleto}
           className={`h-[53px] w-[226px] rounded-[8px] transition-colors border-2 ${
             checklistCompleto
-              ? 'bg-[#a855f7] border-[#a855f7] hover:bg-[#9333ea] cursor-pointer'
+              ? 'bg-[#ffb700] border-[#ffb700] hover:bg-[#e6a600] cursor-pointer'
               : 'bg-white border-[#40376d] cursor-not-allowed'
           }`}
         >

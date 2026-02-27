@@ -1,12 +1,12 @@
 import type { Seccion } from './types';
 
 export const TAB_LABELS: Record<Seccion, string> = {
-  informacion: 'INFORMACIÓN',
-  identificacion: 'IDENTIFICACIÓN',
-  extraccion: 'EXTRACCIÓN',
-  comparacion_automatica: 'COMP. AUTOMÁTICA',
-  comparacion_archivos: 'COMP. ARCHIVOS',
-  comparacion_manual: 'COMP. MANUAL'
+  informacion: 'PLAN DE JUEGO',
+  identificacion: 'CANCHA Y ALINEACIÓN',
+  extraccion: 'LECTURA DEL MARCADOR',
+  comparacion_automatica: 'VAR AUTOMÁTICO',
+  comparacion_archivos: 'REVISIÓN EN CABINA',
+  comparacion_manual: 'REVISIÓN EN CANCHA'
 };
 
 export const ALL_TABS: Seccion[] = [
@@ -18,20 +18,20 @@ export const EXTRACTOR_TABS: Seccion[] = ['informacion', 'identificacion', 'extr
 export const COMPARADOR_TABS: Seccion[] = ['comparacion_archivos'];
 
 export const TAB_COLORS: Record<Seccion, string> = {
-  informacion: '#a855f7',
+  informacion: '#ffb700',
   identificacion: '#ffb700',
   extraccion: '#11d0d0',
   comparacion_automatica: '#ff5a5a',
-  comparacion_archivos: '#ff8c42',
+  comparacion_archivos: '#ff5a5a',
   comparacion_manual: '#d3c4d1'
 };
 
 export const TAB_BG_CLASSES: Record<Seccion, string> = {
-  informacion: 'bg-[#a855f7]',
+  informacion: 'bg-[#ffb700]',
   identificacion: 'bg-[#ffb700]',
   extraccion: 'bg-[#11d0d0]',
   comparacion_automatica: 'bg-[#ff5a5a]',
-  comparacion_archivos: 'bg-[#ff8c42]',
+  comparacion_archivos: 'bg-[#ff5a5a]',
   comparacion_manual: 'bg-[#d3c4d1]'
 };
 

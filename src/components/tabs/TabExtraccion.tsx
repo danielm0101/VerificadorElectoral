@@ -247,12 +247,19 @@ export default function TabExtraccion({
           >
             <span className="font-['Poppins',sans-serif] font-semibold text-xl text-white">PÁGINA DE LA REGISTRADURÍA</span>
           </button>
+
+          <div className="flex items-center gap-3 mt-6">
+            <StepBadge number={5} color="#11d0d0" />
+            <p className="font-['Poppins',sans-serif] font-medium text-[#40376d] text-lg">
+              Sube a la carpeta de Drive los archivos CSV Y MMV.
+            </p>
+          </div>
         </div>
 
         {/* Columna 3: Checklist */}
         <div>
           <p className="font-['Poppins',sans-serif] font-bold text-[#11d0d0] text-base mb-6 leading-relaxed">
-            SI YA CUENTAS CON LA SIGUIENTE INFORMACIÓN, PUEDES CONTINUAR A LA COMPARACIÓN AUTOMÁTICA:
+            SI YA CUENTAS CON LA SIGUIENTE INFORMACIÓN, PUEDES CONTINUAR AL VAR AUTOMÁTICO:
           </p>
 
           <div className="space-y-5">
