@@ -174,6 +174,9 @@ function setupAutoUpdater() {
   // Evita errores de SHA512 al saltar versiones (ej: v1.0.6 → v1.0.8) donde
   // el blockmap de la versión anterior no coincide con la nueva.
   autoUpdater.disableDifferentialDownload = true;
+  // Deshabilitar verificación de firma digital — el instalador no tiene
+  // certificado de code signing comercial.
+  autoUpdater.verifyUpdateCodeSignature = false;
 
   // Excluir de Defender: userData, Updates, y el directorio temp del sistema
   // (electron-updater descarga a temp aunque se configure cachePath)

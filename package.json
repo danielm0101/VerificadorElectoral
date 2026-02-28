@@ -1,6 +1,6 @@
 {
   "name": "verificador-electoral",
-  "version": "1.0.17",
+  "version": "1.0.18",
   "description": "Sistema de Verificación Electoral - E14 y E24 - Consejo Nacional Electoral de Colombia",
   "main": "electron/main.cjs",
   "author": {
@@ -82,9 +82,9 @@
     "win": {
       "target": "nsis",
       "icon": "public/icon.ico",
-      "publisherName": "Consejo Nacional Electoral de Colombia",
       "legalTrademarks": "Consejo Nacional Electoral de Colombia - Elecciones Congreso 2026",
-      "requestedExecutionLevel": "asInvoker"
+      "requestedExecutionLevel": "asInvoker",
+      "verifyUpdateCodeSignature": false
     },
     "nsis": {
       "oneClick": false,
