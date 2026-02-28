@@ -128,24 +128,19 @@ function getRemovableDrivesLinux() {
     // Only removable disks with a serial
     if (dev.type !== 'disk' || !dev.rm || !dev.serial) continue;
 
-    // Collect filesystem UUIDs from partitions for cross-platform matching
-    const extraSerials = [];
-
-    // Check if the disk itself is mounted
+    // Check if the disk itself is mounted (no partitions)
     if (dev.mountpoint) {
-      if (dev.uuid) extraSerials.push(dev.uuid);
-      drives.push({ deviceId: dev.mountpoint, serial: dev.serial, extraSerials });
+      const extraSerials = dev.uuid ? [dev.uuid] : [];
+      drives.push({ deviceId: dev.mountpoint, serial: dev.serial, extraSerials: [...extraSerials] });
     }
 
-    // Check partitions (children)
+    // Check partitions (children) — each partition gets its OWN UUID only
     if (dev.children) {
       for (const child of dev.children) {
         let mountpoint = child.mountpoint;
 
-        // Collect filesystem UUID from partition
-        if (child.uuid) {
-          extraSerials.push(child.uuid);
-        }
+        // Each partition gets a fresh array with only its own UUID
+        const extraSerials = child.uuid ? [child.uuid] : [];
 
         // If partition is not mounted, try to mount it
         if (!mountpoint) {
@@ -157,17 +152,17 @@ function getRemovableDrivesLinux() {
         }
 
         if (mountpoint) {
-          drives.push({ deviceId: mountpoint, serial: dev.serial, extraSerials });
+          drives.push({ deviceId: mountpoint, serial: dev.serial, extraSerials: [...extraSerials] });
         }
       }
     }
 
     // Disk with no partitions and not mounted — try mounting directly
     if (!dev.children && !dev.mountpoint) {
-      if (dev.uuid) extraSerials.push(dev.uuid);
+      const extraSerials = dev.uuid ? [dev.uuid] : [];
       const mountpoint = tryMount(dev.name);
       if (mountpoint) {
-        drives.push({ deviceId: mountpoint, serial: dev.serial, extraSerials });
+        drives.push({ deviceId: mountpoint, serial: dev.serial, extraSerials: [...extraSerials] });
       }
     }
   }
@@ -209,32 +204,42 @@ function hashSerial(serial) {
  */
 function getAllDriveHashes(drive) {
   const serials = new Set();
+  let deviceId = null;
+  const fsUUIDs = [];
 
-  // Primary serial (hardware serial on Linux, VolumeSerialNumber on Windows)
-  if (drive.serial) {
-    serials.add(drive.serial.toUpperCase());
-  }
-
-  // Extra serials (filesystem UUIDs on Linux)
+  // Separate device-id (32 hex chars = randomBytes(16)) from filesystem UUIDs in extraSerials
   if (drive.extraSerials) {
     for (const extra of drive.extraSerials) {
       if (!extra) continue;
       const upper = extra.toUpperCase();
-      serials.add(upper);
-
-      // Also try without dashes (FAT32: "XXXX-XXXX" → "XXXXXXXX")
-      const noDash = upper.replace(/-/g, '');
-      if (noDash !== upper) {
-        serials.add(noDash);
-      }
-
-      // For NTFS UUIDs (16 hex chars), also try first 8 chars
-      // as Windows VolumeSerialNumber might only be 8 hex chars
-      if (/^[0-9A-F]{16}$/.test(noDash)) {
-        serials.add(noDash.substring(0, 8));
-        serials.add(noDash.substring(8, 16));
+      if (/^[0-9A-F]{32}$/.test(upper)) {
+        deviceId = upper; // Generated device-id written during registration
+      } else {
+        // Filesystem UUID
+        const noDash = upper.replace(/-/g, '');
+        fsUUIDs.push(noDash);
+        serials.add(upper);
+        if (noDash !== upper) serials.add(noDash);
+        // For NTFS UUIDs (16 hex chars), also try first/second 8 chars
+        if (/^[0-9A-F]{16}$/.test(noDash)) {
+          serials.add(noDash.substring(0, 8));
+          serials.add(noDash.substring(8, 16));
+        }
       }
     }
+  }
+
+  if (deviceId) {
+    // Double-factor: SHA256(device-id:uuid). On Windows, drive.serial IS the VolumeSerialNumber.
+    const uuidSources = fsUUIDs.length > 0 ? fsUUIDs
+      : (drive.serial ? [drive.serial.toUpperCase().replace(/-/g, '')] : []);
+    for (const uuid of uuidSources) {
+      if (uuid) serials.add(deviceId + ':' + uuid);
+    }
+  } else if (drive.serial) {
+    // No device-id: legacy single-factor (Windows VolumeSerialNumber or old registration)
+    const hasUUIDs = fsUUIDs.length > 0;
+    if (!hasUUIDs) serials.add(drive.serial.toUpperCase());
   }
 
   // Hash all unique serial variants
@@ -259,6 +264,12 @@ function findSecurityUSB() {
       if (fs.existsSync(keyPath)) {
         const stat = fs.statSync(keyPath);
         if (stat.size === KEY_SIZE) {
+          // Read device-id.txt if present — guaranteed-unique ID written during registration
+          const deviceIdPath = path.join(drive.deviceId, KEY_FOLDER, 'device-id.txt');
+          if (fs.existsSync(deviceIdPath)) {
+            const fileDeviceId = fs.readFileSync(deviceIdPath, 'utf8').trim();
+            if (fileDeviceId) drive.extraSerials.unshift(fileDeviceId);
+          }
           return { drive, keyPath };
         }
       }
