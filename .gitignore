@@ -44,6 +44,10 @@ coverage/
 # R Portable (muy grande para git, se distribuye con el instalador)
 r-portable/
 
+# Python Portable (muy grande para git, se genera con: npm run setup:python)
+python-portable/*
+!python-portable/.gitkeep
+
 # Security - master encryption key (NEVER commit)
 llave_maestra.key
 

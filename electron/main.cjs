@@ -412,6 +412,20 @@ ipcMain.handle('cargar-configuracion', async () => {
 // ============================================
 
 // Obtener ruta de R Portable
+function obtenerRutaPython() {
+  if (isDev) {
+    if (process.platform !== 'linux') {
+      const pythonDev = path.join(__dirname, '..', 'python-portable', 'python.exe');
+      if (fs.existsSync(pythonDev)) return pythonDev;
+    }
+    return null; // En Linux dev no usar portable
+  } else {
+    const pythonProd = path.join(process.resourcesPath, 'python-portable', 'python.exe');
+    if (fs.existsSync(pythonProd)) return pythonProd;
+    return null;
+  }
+}
+
 function obtenerRutaR() {
   if (isDev) {
     // Dev: en Linux ignorar .exe de Windows, usar R del sistema directamente
@@ -566,6 +580,7 @@ ipcMain.handle('convertir-pdf-csv-v2', async (event, { archivos, apiKey, modo = 
       }
 
       // Ejecutar script R
+      const pythonPath = obtenerRutaPython();
       const rProcess = spawn(rPath, [
         '--vanilla',
         scriptPath,
@@ -573,7 +588,8 @@ ipcMain.handle('convertir-pdf-csv-v2', async (event, { archivos, apiKey, modo = 
       ], {
         env: {
           ...process.env,
-          R_LIBS_USER: rLibsUser
+          R_LIBS_USER: rLibsUser,
+          ...(pythonPath ? { RETICULATE_PYTHON: pythonPath } : {})
         }
       });
 
@@ -947,10 +963,12 @@ ipcMain.handle('comparar-e14-e24', async (event, archivoCSV, archivoMMV, carpeta
         rLibsUser = path.join(path.dirname(path.dirname(path.dirname(rPath))), 'library');
       }
 
+      const pythonPathComp = obtenerRutaPython();
       const rProcess = spawn(rPath, ['--vanilla', scriptPath, manifiestoPath], {
         env: {
           ...process.env,
-          R_LIBS_USER: rLibsUser
+          R_LIBS_USER: rLibsUser,
+          ...(pythonPathComp ? { RETICULATE_PYTHON: pythonPathComp } : {})
         }
       });
 
