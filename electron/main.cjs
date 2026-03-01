@@ -169,6 +169,21 @@ function setupAutoUpdater() {
   if (!fs.existsSync(updatesDir)) {
     fs.mkdirSync(updatesDir, { recursive: true });
   }
+
+  // Limpiar archivos parciales de descargas fallidas anteriores
+  try {
+    const archivos = fs.readdirSync(updatesDir);
+    for (const archivo of archivos) {
+      // .exe parciales, .tmp y blockmap de versiones anteriores a la actual
+      if (archivo.endsWith('.exe') || archivo.endsWith('.tmp') || archivo.endsWith('.blockmap')) {
+        fs.unlinkSync(path.join(updatesDir, archivo));
+        console.log('[updater] Cache limpiada:', archivo);
+      }
+    }
+  } catch (e) {
+    console.warn('[updater] No se pudo limpiar cache:', e.message);
+  }
+
   autoUpdater.cachePath = updatesDir;
   // Deshabilitar descarga diferencial — fuerza descarga completa del instalador.
   // Evita errores de SHA512 al saltar versiones (ej: v1.0.6 → v1.0.8) donde
@@ -241,6 +256,12 @@ function setupAutoUpdater() {
   // Buscar actualizaciones con reintentos y backoff exponencial
   let checkAttempt = 0;
   const MAX_CHECK_ATTEMPTS = 3;
+  const INTERVALO_RECHECK_MS = 30 * 60 * 1000; // 30 minutos
+
+  function doCheck() {
+    checkAttempt = 0;
+    scheduleCheck(0);
+  }
 
   function scheduleCheck(delayMs) {
     setTimeout(() => {
@@ -249,13 +270,24 @@ function setupAutoUpdater() {
       autoUpdater.checkForUpdates().catch(err => {
         console.error('[updater] Error buscando actualizaciones:', err.message);
         if (checkAttempt < MAX_CHECK_ATTEMPTS) {
-          scheduleCheck(delayMs * 2);
+          scheduleCheck(5000 * Math.pow(2, checkAttempt)); // backoff exponencial
+        } else {
+          // Agotados los reintentos: mostrar boton de descarga manual
+          if (mainWindow) {
+            mainWindow.webContents.send('update-error', {
+              message: 'No se pudo verificar actualizaciones. Descarga manualmente la ultima version.'
+            });
+          }
         }
       });
     }, delayMs);
   }
 
-  scheduleCheck(5000);
+  // Check inicial a los 5 segundos
+  setTimeout(doCheck, 5000);
+
+  // Re-check cada 30 minutos (por si la app queda abierta mucho tiempo)
+  setInterval(doCheck, INTERVALO_RECHECK_MS);
 }
 
 // ============================================
