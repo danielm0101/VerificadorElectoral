@@ -25,10 +25,31 @@ let securityStatus = { status: 'pending' };
 let mainWindow;
 let procesoRActual = null; // Referencia al proceso R en ejecución
 
+function cargarEstadoVentana() {
+  const archivo = path.join(app.getPath('userData'), 'window-state.json');
+  try {
+    if (fs.existsSync(archivo)) return JSON.parse(fs.readFileSync(archivo, 'utf8'));
+  } catch (_) {}
+  return null; // primera vez → maximizar
+}
+
+function guardarEstadoVentana(win) {
+  const archivo = path.join(app.getPath('userData'), 'window-state.json');
+  try {
+    const isMaximized = win.isMaximized();
+    const bounds = win.getNormalBounds(); // tamaño sin maximizar
+    fs.writeFileSync(archivo, JSON.stringify({ ...bounds, isMaximized }));
+  } catch (_) {}
+}
+
 function createWindow() {
+  const estado = cargarEstadoVentana();
+
   mainWindow = new BrowserWindow({
-    width: 1400,
-    height: 900,
+    width:  estado?.width  ?? 1400,
+    height: estado?.height ?? 900,
+    x:      estado?.x,
+    y:      estado?.y,
     minWidth: 1200,
     minHeight: 800,
     icon: path.join(__dirname, '../public/icon.ico'),
@@ -50,6 +71,15 @@ function createWindow() {
 
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
+    // Primera vez o si el usuario la dejó maximizada → maximizar
+    if (!estado || estado.isMaximized) {
+      mainWindow.maximize();
+    }
+  });
+
+  // Guardar estado al cerrar
+  mainWindow.on('close', () => {
+    guardarEstadoVentana(mainWindow);
   });
 
   mainWindow.on('closed', () => {
