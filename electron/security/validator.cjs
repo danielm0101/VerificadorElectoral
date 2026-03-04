@@ -15,7 +15,8 @@ const { findSecurityUSB, readKey, getAllDriveHashes } = require('./usb-detector.
 const { decryptFile, deriveKey } = require('./encryption.cjs');
 
 const REGISTRY_URL = 'https://danielm0101.github.io/verificador-registro/registry.json';
-const KEY_FRAGMENT_URL = 'https://danielm0101.github.io/verificador-registro/key_fragment.bin';
+const WORKER_URL = 'https://verificador-key.esteban200240.workers.dev/';
+const APP_TOKEN = 'b28f0ef20144037c5b582908ea65af4b';
 
 /**
  * Run the full security validation flow (async, requires internet):
@@ -55,10 +56,15 @@ async function validate(encryptedScriptsDir, tempBaseDir) {
     };
   }
 
-  // Step 3: Fetch GitHub key fragment
+  // Step 3: Fetch GitHub key fragment via authenticated Worker
   let githubKey;
   try {
-    const response = await fetchWithTimeout(KEY_FRAGMENT_URL, 15000);
+    const primaryHash = getAllDriveHashes(usbResult.drive)[0];
+    const response = await fetchWithTimeout(WORKER_URL, 15000, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: APP_TOKEN, usbHash: primaryHash })
+    });
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
     }
@@ -68,7 +74,7 @@ async function validate(encryptedScriptsDir, tempBaseDir) {
       throw new Error(`Tamaño inesperado: ${githubKey.length} bytes`);
     }
   } catch (err) {
-    console.error('Error obteniendo key_fragment.bin:', err.message);
+    console.error('Error obteniendo fragmento de llave:', err.message);
     return {
       status: 'sin_conexion',
       message: 'No se pudo conectar al servidor de verificación. Se requiere conexión a internet.'
@@ -196,11 +202,11 @@ function verifyRegistrySignature(registry, key) {
  * @param {number} timeoutMs
  * @returns {Promise<Response>}
  */
-async function fetchWithTimeout(url, timeoutMs) {
+async function fetchWithTimeout(url, timeoutMs, options = {}) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    return await fetch(url, { signal: controller.signal });
+    return await fetch(url, { ...options, signal: controller.signal });
   } finally {
     clearTimeout(timeout);
   }
