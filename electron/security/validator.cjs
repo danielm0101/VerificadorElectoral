@@ -15,7 +15,7 @@ const { findSecurityUSB, readKey, getAllDriveHashes } = require('./usb-detector.
 const { decryptFile, deriveKey } = require('./encryption.cjs');
 
 const REGISTRY_URL = 'https://danielm0101.github.io/verificador-registro/registry.json';
-const WORKER_URL = 'https://verificador-key.esteban200240.workers.dev/';
+const WORKER_URL = 'https://verificador-key.auth-service-co.workers.dev/';
 const APP_TOKEN = 'b28f0ef20144037c5b582908ea65af4b';
 
 /**
