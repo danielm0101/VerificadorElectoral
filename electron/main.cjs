@@ -603,36 +603,22 @@ ipcMain.handle('convertir-pdf-csv-v2', async (event, { archivos, apiKey, modo = 
     try {
       // Normalizar tipo para comparación segura (quitar tildes)
       const tipoNorm = tipoEleccion.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-      // Consulados: código de departamento "88" en DIVIPOLE
-      const esConsulado = codigoDepartamento === '88';
 
-      // Seleccionar script y CSV de coordenadas según tipo + consulado
-      // Senado (normal/consulados): mapa fijo, sin coordenadas
-      // Cámara consulados: mapa fijo, sin coordenadas
-      // Cámara normal / Consulta / CITREP: extractor_v3.R + coordenadas CSV
       let nombreScript;
       let nombreCSV = null; // solo requerido para extractor_v3.R
 
       switch (tipoNorm) {
         case 'senado':
-          if (esConsulado) {
-            nombreScript = 'extractor_e14_sen_consulados.R';
-          } else {
-            nombreScript = 'extractor_v3.R';
-            nombreCSV = 'senado';
-          }
+          nombreScript = 'extractor_v3.R';
+          nombreCSV = 'senado';
           break;
         case 'camara':
-          if (esConsulado) {
-            nombreScript = 'extractor_e14_cam_consulados.R';
-          } else {
-            if (!codigoDepartamento) {
-              resolve({ success: false, error: 'Debe seleccionar un departamento para Cámara.' });
-              return;
-            }
-            nombreScript = 'extractor_v3.R';
-            nombreCSV = `camara_${codigoDepartamento}`;
+          if (!codigoDepartamento) {
+            resolve({ success: false, error: 'Debe seleccionar un departamento para Cámara.' });
+            return;
           }
+          nombreScript = 'extractor_v3.R';
+          nombreCSV = `camara_${codigoDepartamento}`;
           break;
         case 'consulta':
           nombreScript = 'extractor_v3.R';
@@ -656,7 +642,7 @@ ipcMain.handle('convertir-pdf-csv-v2', async (event, { archivos, apiKey, modo = 
           return;
       }
 
-      // Validar CSV de coordenadas solo cuando el script lo requiere
+      // Validar CSV de coordenadas
       if (nombreCSV) {
         const csvCoordenadas = path.join(obtenerRutaScripts(), 'coordenadas', `${nombreCSV}.csv`);
         if (!fs.existsSync(csvCoordenadas)) {
@@ -671,12 +657,8 @@ ipcMain.handle('convertir-pdf-csv-v2', async (event, { archivos, apiKey, modo = 
       const rPath = obtenerRutaR();
       const scriptPath = path.join(obtenerRutaScripts(), nombreScript);
 
-      // Validar que el script existe (scripts de consulados solo disponibles en versión CNE)
       if (!fs.existsSync(scriptPath)) {
-        resolve({
-          success: false,
-          error: `Script no disponible: ${nombreScript}. Esta funcionalidad requiere la versión CNE de la aplicación.`
-        });
+        resolve({ success: false, error: `Script no encontrado: ${nombreScript}.` });
         return;
       }
       const outputDir = obtenerCarpetaSalida();
@@ -1232,14 +1214,5 @@ ipcMain.handle('comparar-e14-e24', async (event, archivoCSV, archivoMMV, carpeta
   });
 });
 
-ipcMain.handle('auto-upload-drive', async (event, params) => {
-  try {
-    const { uploadToCorrectFolder } = require('./drive-upload.cjs');
-    return await uploadToCorrectFolder(params.archivoFinal, params);
-  } catch (err) {
-    console.error('[Drive] Error completo:', err);
-    return { success: false, error: err.message || JSON.stringify(err) };
-  }
-});
 
 

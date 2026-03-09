@@ -1,6 +1,6 @@
 {
   "name": "verificador-electoral",
-  "version": "1.0.54",
+  "version": "1.0.55",
   "description": "Sistema de Verificación Electoral - E14 y E24 - Consejo Nacional Electoral de Colombia",
   "main": "electron/main.cjs",
   "author": {
@@ -14,7 +14,6 @@
     "dev": "vite",
     "build": "vite build",
     "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && cross-env ELECTRON_DEV=true electron .\"",
-    "electron:dev:cne": "concurrently \"vite --mode cne\" \"wait-on http://localhost:5173 && cross-env ELECTRON_DEV=true electron .\"",
     "electron:build": "vite build && electron-builder",
     "electron:preview": "vite build && electron .",
     "setup:python": "node tools/setup-python-portable.cjs",
