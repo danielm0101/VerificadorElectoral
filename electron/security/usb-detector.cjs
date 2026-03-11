@@ -129,10 +129,13 @@ function getRemovableDrivesScan() {
       if (!fs.existsSync(keyPath)) continue;
 
       // vol X: is a built-in CMD command, always available on Windows
+      // The regex matches the serial number regardless of locale (English/Spanish/etc.)
+      // English: "Volume Serial Number is XXXX-XXXX"
+      // Spanish: "El número de serie del volumen es XXXX-XXXX"
       let serial = '';
       try {
         const volOut = execSync(`vol ${deviceId}`, { encoding: 'utf8', timeout: 3000 });
-        const m = volOut.match(/[Ss]erial [Nn]umber is ([0-9A-Fa-f-]+)/);
+        const m = volOut.match(/([0-9A-Fa-f]{4}-[0-9A-Fa-f]{4})/);
         if (m) serial = m[1].replace(/-/g, '').toUpperCase();
       } catch (_) {}
 
