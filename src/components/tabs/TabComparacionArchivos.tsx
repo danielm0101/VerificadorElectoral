@@ -10,6 +10,8 @@ interface TabComparacionArchivosProps {
   errorComparacion: string | null;
   resultadoComparacion: ResultadoComparacion | null;
   discrepanciasDetalle: DiscrepanciaFila[];
+  tipoEleccion: string;
+  onTipoEleccionChange: (v: string) => void;
   onSeleccionarCSV: () => void;
   onSeleccionarMMV: () => void;
   onGenerarComparacion: () => void;
@@ -21,6 +23,7 @@ interface TabComparacionArchivosProps {
 export default function TabComparacionArchivos({
   archivoCSV, carpetaMMV, comparacionEnProgreso, comparacionCompleta,
   progresoComparacion, errorComparacion, resultadoComparacion, discrepanciasDetalle,
+  tipoEleccion, onTipoEleccionChange,
   onSeleccionarCSV, onSeleccionarMMV, onGenerarComparacion,
   onCancelarProceso, onDescargarResultados
 }: TabComparacionArchivosProps) {
@@ -104,8 +107,28 @@ export default function TabComparacionArchivos({
           <div className="flex items-center gap-3 mb-4">
             <StepBadge number={3} color="#ff5a5a" />
             <p className="font-['Poppins',sans-serif] font-medium text-[#40376d] text-lg">
-              Crea el archivo de comparación.
+              Configura y crea el archivo de comparación.
             </p>
+          </div>
+
+          {/* Filtros de comparación */}
+          <div className="mb-4 space-y-3">
+            <div>
+              <label className="font-['Poppins',sans-serif] font-semibold text-[#40376d] text-lg block mb-2">
+                TIPO DE ELECCIÓN
+              </label>
+              <select
+                value={tipoEleccion}
+                onChange={e => onTipoEleccionChange(e.target.value)}
+                disabled={comparacionEnProgreso}
+                className="w-full h-[42px] bg-[#d9d9d9] rounded-[8px] px-3 text-[#40376d] font-['Poppins',sans-serif] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#ffb700] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <option value="">Todos (sin filtro)</option>
+                <option value="CAMARA">Cámara</option>
+                <option value="SENADO">Senado</option>
+                <option value="CONSULTAS">Consultas</option>
+              </select>
+            </div>
           </div>
 
           <button

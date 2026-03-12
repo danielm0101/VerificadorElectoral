@@ -89,6 +89,7 @@ export default function App() {
   const [resultadoComparacion, setResultadoComparacion] = useState<ResultadoComparacion | null>(null);
   const [errorComparacion, setErrorComparacion] = useState<string | null>(null);
   const [discrepanciasDetalle, setDiscrepanciasDetalle] = useState<DiscrepanciaFila[]>([]);
+  const [tipoEleccionComparacion, setTipoEleccionComparacion] = useState<string>('');
 
   // Cascading selects
   const esCITREP = tipoEleccion === 'CITREP';
@@ -390,7 +391,10 @@ export default function App() {
     });
 
     try {
-      const resultado = await window.electronAPI.compararE14E24(archivoCSV, carpetaMMV);
+      const resultado = await window.electronAPI.compararE14E24(archivoCSV, carpetaMMV, undefined, {
+        tipo_eleccion: tipoEleccionComparacion,
+        excluir_especiales: true
+      });
       if (!resultado.success && !canceladoRef.current) setErrorComparacion(resultado.error || 'Error en la comparación');
     } catch (err) {
       console.error('Error en comparación:', err);
@@ -498,6 +502,8 @@ export default function App() {
               errorComparacion={errorComparacion}
               resultadoComparacion={resultadoComparacion}
               discrepanciasDetalle={discrepanciasDetalle}
+              tipoEleccion={tipoEleccionComparacion}
+              onTipoEleccionChange={setTipoEleccionComparacion}
               onSeleccionarCSV={handleSeleccionarCSV}
               onSeleccionarMMV={handleSeleccionarMMV}
               onGenerarComparacion={handleGenerarComparacion}

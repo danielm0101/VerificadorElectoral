@@ -25,7 +25,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Comparacion E14-E24
   seleccionarCarpetaSalida: () => ipcRenderer.invoke('seleccionar-carpeta-salida'),
-  compararE14E24: (archivoCSV, carpetaMMV, carpetaSalida) => ipcRenderer.invoke('comparar-e14-e24', archivoCSV, carpetaMMV, carpetaSalida),
+  compararE14E24: (archivoCSV, carpetaMMV, carpetaSalida, opciones) => ipcRenderer.invoke('comparar-e14-e24', archivoCSV, carpetaMMV, carpetaSalida, opciones),
   abrirResultados: () => ipcRenderer.invoke('abrir-resultados'),
 
   // Eventos de R

@@ -21,13 +21,31 @@ function csvAXlsx(csvPath) {
   return xlsxPath;
 }
 
-// Convierte un xlsx a CSV temporal (sep ';') y devuelve la ruta
+// Convierte un xlsx a CSV temporal y devuelve la ruta.
+// Detecta el formato "CSV-in-xlsx" (una sola columna A) que genera el extractor:
+// en ese caso extrae los valores crudos directamente para evitar que sheet_to_csv
+// entrecomille filas con comillas internas (ej. MAIS), lo que confunde a read.csv de R.
 function xlsxACsvTemp(xlsxPath) {
   const wb = XLSX.readFile(xlsxPath);
   const ws = wb.Sheets[wb.SheetNames[0]];
-  const csv = XLSX.utils.sheet_to_csv(ws, { FS: ';' });
+  const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
   const tmpPath = xlsxPath.replace(/\.xlsx$/i, '_tmp.csv');
-  fs.writeFileSync(tmpPath, csv, 'utf8');
+
+  if (range.e.c === 0) {
+    // Formato de columna única: cada celda ya es una fila CSV completa.
+    // Extraer el valor crudo directamente sin pasar por sheet_to_csv.
+    const lines = [];
+    for (let r = range.s.r; r <= range.e.r; r++) {
+      const cell = ws[XLSX.utils.encode_cell({ r, c: 0 })];
+      if (cell && cell.v != null) lines.push(String(cell.v));
+    }
+    fs.writeFileSync(tmpPath, lines.join('\n'), 'utf8');
+  } else {
+    // Xlsx con columnas normales: exportar a CSV con separador ';'
+    const csv = XLSX.utils.sheet_to_csv(ws, { FS: ';' });
+    fs.writeFileSync(tmpPath, csv, 'utf8');
+  }
+
   return tmpPath;
 }
 
@@ -1033,7 +1051,7 @@ ipcMain.handle('seleccionar-carpeta-salida', async () => {
 // ============================================
 // Comparar E14 extraidos vs E24 oficial (MMV)
 // ============================================
-ipcMain.handle('comparar-e14-e24', async (event, archivoCSV, archivoMMV, carpetaSalida) => {
+ipcMain.handle('comparar-e14-e24', async (event, archivoCSV, archivoMMV, carpetaSalida, opciones = {}) => {
   return new Promise((resolve) => {
     let tmpCsvE14 = null;
     let tmpCsvMMV = null;
@@ -1072,7 +1090,9 @@ ipcMain.handle('comparar-e14-e24', async (event, archivoCSV, archivoMMV, carpeta
       const manifiesto = {
         archivo_extraidos: archivoCSV,
         archivo_oficiales: archivoMMV,
-        carpeta_salida: outputDir
+        carpeta_salida: outputDir,
+        tipo_eleccion:      opciones.tipo_eleccion      || '',
+        excluir_especiales: opciones.excluir_especiales ?? false
       };
 
       const manifiestoPath = path.join(outputDir, 'manifiesto_comparacion.json');
